@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reserva de Coches</title>
+    
+    <!-- Enlace al Manifest para PWA -->
+    <link rel="manifest" href="manifest.json">
+    <!-- Color del tema para la barra de estado en móviles -->
+    <meta name="theme-color" content="#2563eb">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
     <style>
         /* Estilos personalizados para los botones de selección de turno */
         .turno-btn.selected {
@@ -14,9 +21,21 @@
             border-color: #3b82f6;
         }
     </style>
+
+    <!-- Registro del Service Worker para convertirla en PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('Service Worker registrado con éxito'))
+            .catch(err => console.error('Error al registrar Service Worker', err));
+        });
+      }
+    </script>
 </head>
 <body class="bg-gray-100 min-h-screen font-sans">
 
+    <!-- Encabezado -->
     <header class="bg-blue-600 text-white shadow-md py-4">
         <div class="container mx-auto px-4 flex items-center justify-center">
             <i class="fas fa-car text-2xl mr-3"></i>
@@ -26,28 +45,35 @@
 
     <main class="container mx-auto px-4 py-6 max-w-3xl">
         
+        <!-- Formulario principal -->
         <form id="reservaForm" class="space-y-6">
             
+            <!-- Selector de Fecha -->
             <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                 <label for="fecha" class="block text-sm font-medium text-gray-700 mb-1">Día de la reserva</label>
                 <input type="date" id="fecha" name="fecha" required 
                     class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
             </div>
 
+            <!-- Nombre del residente -->
             <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                 <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">Tu Nombre</label>
                 <input type="text" id="nombre" name="nombre" placeholder="Ej. Álvaro" required 
                     class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
             </div>
 
+            <!-- Lista de Coches -->
             <div class="space-y-4" id="coches-container">
-                </div>
+                <!-- Las tarjetas de los coches se generarán dinámicamente con JS -->
+            </div>
 
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-200 flex justify-center items-center">
+            <!-- Botón de Envío -->
+            <button type="submit" id="btn-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-200 flex justify-center items-center">
                 <i class="fas fa-check-circle mr-2"></i> Confirmar Reserva
             </button>
         </form>
 
+        <!-- Mensaje de confirmación -->
         <div id="mensajeExito" class="hidden mt-6 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded" role="alert">
             <p class="font-bold">¡Reserva enviada!</p>
             <p>Los datos se han registrado correctamente en la hoja de cálculo.</p>
@@ -93,7 +119,6 @@
         });
 
         // Lógica para seleccionar turnos (Mañana / Tarde)
-        // Un coche solo puede reservarse una vez por turno en el frontend
         const selecciones = {}; // Guarda la selección: { cocheId: [turno] }
 
         document.querySelectorAll('.turno-btn').forEach(btn => {
@@ -142,24 +167,45 @@
                 return;
             }
 
-            console.log("Datos a enviar a Google Sheets:", reservas);
+            // Cambiar el estado del botón mientras se envía
+            const btnSubmit = document.getElementById('btn-submit');
+            const originalBtnText = btnSubmit.innerHTML;
+            btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Enviando...';
+            btnSubmit.disabled = true;
 
-            // AQUÍ IRÍA LA LLAMADA A GOOGLE APPS SCRIPT (fetch)
-            // fetch('TU_URL_DE_GOOGLE_APPS_SCRIPT', {
-            //     method: 'POST',
-            //     body: JSON.stringify(reservas)
-            // }).then(res => ...)
+            // --- REEMPLAZA ESTO CON LA URL DE TU SCRIPT DE GOOGLE ---
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbx7RyhObzV_0lLV4Wc_10BSCvY6Y0iAUWKAJt6gsH641xsEXvQtzPSgb3X_jfuMGXkLgw/exec';
 
-            // Mostrar mensaje de éxito simulado
-            this.reset();
-            document.querySelectorAll('.turno-btn').forEach(b => b.classList.remove('selected'));
-            for (let prop in selecciones) delete selecciones[prop]; // Limpiar selecciones
-            document.getElementById('fecha').valueAsDate = new Date();
-            
-            document.getElementById('mensajeExito').classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('mensajeExito').classList.add('hidden');
-            }, 4000);
+            fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(reservas)
+            })
+            .then(() => {
+                // Restaurar formulario y limpiar selecciones
+                document.getElementById('reservaForm').reset();
+                document.querySelectorAll('.turno-btn').forEach(b => b.classList.remove('selected'));
+                for (let prop in selecciones) delete selecciones[prop];
+                document.getElementById('fecha').valueAsDate = new Date();
+                
+                // Mostrar mensaje de éxito
+                document.getElementById('mensajeExito').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('mensajeExito').classList.add('hidden');
+                }, 4000);
+            })
+            .catch(error => {
+                console.error('Error enviando reserva:', error);
+                alert('Hubo un error de conexión, por favor intenta de nuevo.');
+            })
+            .finally(() => {
+                // Restaurar el texto y el estado del botón
+                btnSubmit.innerHTML = originalBtnText;
+                btnSubmit.disabled = false;
+            });
         });
     </script>
 </body>

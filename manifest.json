@@ -1,0 +1,17 @@
+{
+  "name": "Reserva de Coches Residencia",
+  "short_name": "Coches",
+  "description": "Aplicación para reservar los vehículos de la residencia.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
