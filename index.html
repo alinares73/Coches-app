@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva de Coches</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Estilos personalizados para los botones de selección de turno */
+        .turno-btn.selected {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+
+    <header class="bg-blue-600 text-white shadow-md py-4">
+        <div class="container mx-auto px-4 flex items-center justify-center">
+            <i class="fas fa-car text-2xl mr-3"></i>
+            <h1 class="text-xl font-bold">Reserva de Coches</h1>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6 max-w-3xl">
+        
+        <form id="reservaForm" class="space-y-6">
+            
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                <label for="fecha" class="block text-sm font-medium text-gray-700 mb-1">Día de la reserva</label>
+                <input type="date" id="fecha" name="fecha" required 
+                    class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">Tu Nombre</label>
+                <input type="text" id="nombre" name="nombre" placeholder="Ej. Álvaro" required 
+                    class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div class="space-y-4" id="coches-container">
+                </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-200 flex justify-center items-center">
+                <i class="fas fa-check-circle mr-2"></i> Confirmar Reserva
+            </button>
+        </form>
+
+        <div id="mensajeExito" class="hidden mt-6 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded" role="alert">
+            <p class="font-bold">¡Reserva enviada!</p>
+            <p>Los datos se han registrado correctamente en la hoja de cálculo.</p>
+        </div>
+
+    </main>
+
+    <script>
+        // Configuración de los 5 coches
+        const coches = [
+            { id: 1, nombre: "Coche 1" },
+            { id: 2, nombre: "Coche 2" },
+            { id: 3, nombre: "Coche 3" },
+            { id: 4, nombre: "Coche 4" },
+            { id: 5, nombre: "Coche 5" }
+        ];
+
+        const container = document.getElementById('coches-container');
+
+        // Generar las tarjetas de los coches
+        coches.forEach(coche => {
+            const card = document.createElement('div');
+            card.className = 'bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4';
+            
+            card.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="bg-gray-100 p-3 rounded-full">
+                        <i class="fas fa-car-side text-gray-600"></i>
+                    </div>
+                    <span class="font-semibold text-gray-800 text-lg">${coche.nombre}</span>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button type="button" class="turno-btn flex-1 sm:flex-none border border-gray-300 rounded-md py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors" data-coche="${coche.id}" data-turno="Mañana">
+                        <i class="fas fa-sun mr-1"></i> Mañana
+                    </button>
+                    <button type="button" class="turno-btn flex-1 sm:flex-none border border-gray-300 rounded-md py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors" data-coche="${coche.id}" data-turno="Tarde">
+                        <i class="fas fa-moon mr-1"></i> Tarde
+                    </button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        // Lógica para seleccionar turnos (Mañana / Tarde)
+        // Un coche solo puede reservarse una vez por turno en el frontend
+        const selecciones = {}; // Guarda la selección: { cocheId: [turno] }
+
+        document.querySelectorAll('.turno-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.toggle('selected');
+                const cocheId = this.getAttribute('data-coche');
+                const turno = this.getAttribute('data-turno');
+
+                if (!selecciones[cocheId]) {
+                    selecciones[cocheId] = [];
+                }
+
+                if (this.classList.contains('selected')) {
+                    selecciones[cocheId].push(turno);
+                } else {
+                    selecciones[cocheId] = selecciones[cocheId].filter(t => t !== turno);
+                }
+            });
+        });
+
+        // Poner la fecha de hoy por defecto
+        document.getElementById('fecha').valueAsDate = new Date();
+
+        // Manejar el envío del formulario
+        document.getElementById('reservaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fecha = document.getElementById('fecha').value;
+            const nombre = document.getElementById('nombre').value;
+            
+            // Recopilar todas las reservas realizadas
+            const reservas = [];
+            for (const [cocheId, turnos] of Object.entries(selecciones)) {
+                turnos.forEach(turno => {
+                    reservas.push({
+                        fecha: fecha,
+                        nombre: nombre,
+                        coche: `Coche ${cocheId}`,
+                        turno: turno
+                    });
+                });
+            }
+
+            if (reservas.length === 0) {
+                alert("Por favor, selecciona al menos un coche y un turno.");
+                return;
+            }
+
+            console.log("Datos a enviar a Google Sheets:", reservas);
+
+            // AQUÍ IRÍA LA LLAMADA A GOOGLE APPS SCRIPT (fetch)
+            // fetch('TU_URL_DE_GOOGLE_APPS_SCRIPT', {
+            //     method: 'POST',
+            //     body: JSON.stringify(reservas)
+            // }).then(res => ...)
+
+            // Mostrar mensaje de éxito simulado
+            this.reset();
+            document.querySelectorAll('.turno-btn').forEach(b => b.classList.remove('selected'));
+            for (let prop in selecciones) delete selecciones[prop]; // Limpiar selecciones
+            document.getElementById('fecha').valueAsDate = new Date();
+            
+            document.getElementById('mensajeExito').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('mensajeExito').classList.add('hidden');
+            }, 4000);
+        });
+    </script>
+</body>
+</html>
