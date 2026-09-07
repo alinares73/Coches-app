@@ -5,130 +5,140 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Coches Ciudadela</title>
     
-    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#134e4a"> <!-- Teal oscuro -->
+    <meta name="theme-color" content="#115e59"> 
     <meta name="apple-mobile-web-app-capable" content="yes">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        /* Deshabilitar selección de texto y zoom doble en móviles para que parezca app nativa */
         body { -webkit-user-select: none; user-select: none; touch-action: manipulation; }
-        
-        /* Colores personalizados del diseño */
-        .bg-teal-header { background-color: #115e59; } /* Teal 800 */
-        .bg-libre { background-color: #6ee7b7; color: #064e3b; } /* Mint / Teal 300 */
-        .bg-ocupado { background-color: #fb923c; color: #7c2d12; } /* Orange 400 */
-        
-        /* Efecto pulsación */
+        .bg-teal-header { background-color: #115e59; }
+        .bg-libre { background-color: #6ee7b7; color: #064e3b; }
+        .bg-ocupado { background-color: #fb923c; color: #7c2d12; }
         .slot-btn:active { transform: scale(0.95); }
+        
+        /* Animación de carga */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #115e59; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
-
-    <script>
-      // Registro del Service Worker para PWA
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
-        });
-      }
-    </script>
 </head>
 <body class="bg-gray-100 min-h-screen font-sans flex flex-col items-center">
 
-    <!-- Contenedor principal estilo móvil -->
     <div class="w-full max-w-md bg-white min-h-screen shadow-xl relative pb-20">
         
-        <!-- Cabecera Teal -->
+        <!-- Cabecera -->
         <header class="bg-teal-header text-white pt-6 pb-4 px-4 rounded-b-xl shadow-md z-10 relative">
-            <div class="flex items-center justify-center gap-3 mb-4">
-                <div class="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-8"></div> <!-- Espaciador -->
+                <div class="flex items-center gap-2">
                     <i class="fas fa-car text-xl"></i>
+                    <h1 class="text-xl font-light tracking-wide">COCHES CIUDADELA</h1>
                 </div>
-                <h1 class="text-2xl font-light tracking-wide">COCHES CIUDADELA</h1>
+                <!-- Botón de Sincronizar -->
+                <button onclick="cargarDatos()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-teal-700 transition">
+                    <i class="fas fa-sync-alt text-white"></i>
+                </button>
             </div>
             
-            <!-- Barra de días de la semana -->
             <div class="flex items-center justify-between bg-white text-gray-800 rounded-lg px-2 py-2 mx-1 shadow-sm font-semibold text-sm">
-                <button id="prev-week" class="px-2 text-teal-700 hover:text-teal-900"><i class="fas fa-chevron-left"></i></button>
-                <div id="week-days" class="flex flex-1 justify-around text-center">
-                    <!-- JS inyectará los días aquí: L1 M2 X3... -->
-                </div>
-                <button id="next-week" class="px-2 text-teal-700 hover:text-teal-900"><i class="fas fa-chevron-right"></i></button>
+                <button id="prev-week" class="px-2 text-teal-700 text-lg"><i class="fas fa-chevron-left"></i></button>
+                <div id="week-days" class="flex flex-1 justify-around text-center"></div>
+                <button id="next-week" class="px-2 text-teal-700 text-lg"><i class="fas fa-chevron-right"></i></button>
             </div>
         </header>
 
-        <!-- Cuadrícula de Coches (Grid) -->
-        <main class="p-3 mt-2">
-            <div id="grid-container" class="flex flex-col gap-3">
-                <!-- JS inyectará las filas de coches aquí -->
-            </div>
-        </main>
-
-        <!-- Botón inferior (Añadir viajes) -->
-        <div class="fixed bottom-6 w-full max-w-md px-6 z-10 flex justify-center pointer-events-none">
-            <button class="pointer-events-auto bg-white border-2 border-gray-200 text-gray-800 font-bold py-3 px-8 rounded-full shadow-lg text-lg tracking-wide hover:bg-gray-50 flex items-center gap-2">
-                AÑADIR VIAJES
-            </button>
+        <!-- Pantalla de Carga Inicial -->
+        <div id="loading-screen" class="absolute inset-0 z-40 bg-white bg-opacity-90 flex flex-col items-center justify-center mt-32">
+            <div class="loader mb-4"></div>
+            <p class="text-teal-800 font-semibold animate-pulse">Sincronizando reservas...</p>
         </div>
 
+        <main class="p-3 mt-2">
+            <div id="grid-container" class="flex flex-col gap-3"></div>
+        </main>
     </div>
 
-    <!-- MODAL DE RESERVA (Oculto por defecto) -->
-    <div id="reservaModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl transform transition-transform scale-100">
+    <!-- MODAL DE RESERVA -->
+    <div id="reservaModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-teal-800">Confirmar Reserva</h2>
-                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                <button id="closeModalBtn" class="text-gray-400 text-2xl">&times;</button>
             </div>
-            
             <div class="mb-4 text-gray-600">
                 <p><strong>Coche:</strong> <span id="modalCoche"></span></p>
                 <p><strong>Fecha:</strong> <span id="modalFecha"></span></p>
                 <p><strong>Turno:</strong> <span id="modalTurno"></span></p>
             </div>
-
             <form id="formReserva">
                 <div class="mb-5">
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Tu Nombre</label>
-                    <input type="text" id="inputNombre" required placeholder="Ej. Álvaro" 
-                           class="w-full border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-teal-500 text-lg">
+                    <input type="text" id="inputNombre" required class="w-full border-2 border-gray-200 rounded-lg p-3 text-lg">
                 </div>
-                
-                <button type="submit" id="btnConfirmar" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-lg flex items-center justify-center transition-colors text-lg">
-                    Reservar Coche
+                <button type="submit" id="btnConfirmar" class="w-full bg-teal-600 text-white font-bold py-3 rounded-lg flex items-center justify-center text-lg">
+                    Reservar
                 </button>
             </form>
         </div>
     </div>
 
+    <!-- MODAL DE INFORMACIÓN (Quién reservó) -->
+    <div id="infoModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-xs p-6 shadow-2xl text-center">
+            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-500 text-2xl">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Turno Ocupado</h3>
+            <p class="text-gray-600 mb-6">Reservado por: <br><strong class="text-lg text-teal-800" id="infoNombre"></strong></p>
+            <button onclick="cerrarInfoModal()" class="w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-lg">Cerrar</button>
+        </div>
+    </div>
+
     <script>
-        // --- CONFIGURACIÓN DE TU SCRIPT DE GOOGLE ---
+        // === PEGA AQUÍ TU NUEVA URL DE APPS SCRIPT ===
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7RyhObzV_0lLV4Wc_10BSCvY6Y0iAUWKAJt6gsH641xsEXvQtzPSgb3X_jfuMGXkLgw/exec';
 
         const coches = ["Coche 1", "Coche 2", "Coche 3", "Coche 4", "Coche 5"];
         const diasNombres = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+        let currentDate = new Date();
         
-        let currentDate = new Date(); // Fecha de referencia (hoy)
-        
-        // Estado temporal en memoria de las reservas (coche_fecha_turno)
-        // Ejemplo de ID: "Coche 1_2026-09-07_Mañana"
-        const reservasActivas = new Set();
+        // Ahora es un Map para guardar también el nombre: { "Coche 1_2026-09-07_Mañana" => "Álvaro" }
+        let reservasActivas = new Map();
 
-        // Variables para el Modal
-        let reservaPendiente = null;
-        const modal = document.getElementById('reservaModal');
+        // 1. Cargar Datos desde Google Drive
+        function cargarDatos() {
+            document.getElementById('loading-screen').classList.remove('hidden');
+            
+            fetch(SCRIPT_URL)
+                .then(response => response.json())
+                .then(data => {
+                    reservasActivas.clear();
+                    // Llenar el mapa con los datos leídos de Sheets
+                    data.forEach(res => {
+                        const id = `${res.coche}_${res.fecha}_${res.turno}`;
+                        reservasActivas.set(id, res.nombre);
+                    });
+                    renderApp(); // Pintar de nuevo con los datos reales
+                })
+                .catch(error => {
+                    console.error('Error cargando datos:', error);
+                    alert("Error de conexión. Mostrando datos locales.");
+                    renderApp();
+                })
+                .finally(() => {
+                    document.getElementById('loading-screen').classList.add('hidden');
+                });
+        }
 
-        // Función para obtener el lunes de la semana actual
         function getLunes(d) {
             d = new Date(d);
             const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // ajustar si es domingo
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
             return new Date(d.setDate(diff));
         }
 
-        // Renderizar la semana en la cabecera y el grid
         function renderApp() {
             const lunes = getLunes(currentDate);
             const weekDaysContainer = document.getElementById('week-days');
@@ -137,65 +147,42 @@
             weekDaysContainer.innerHTML = '';
             gridContainer.innerHTML = '';
 
-            // Array de fechas de la semana
             const fechasSemana = [];
             for (let i = 0; i < 7; i++) {
                 const dia = new Date(lunes);
                 dia.setDate(lunes.getDate() + i);
                 fechasSemana.push(dia);
-                
-                // Cabecera de días (L1, M2...)
-                weekDaysContainer.innerHTML += `
-                    <div class="flex flex-col items-center">
-                        <span class="text-xs text-gray-500">${diasNombres[i]}</span>
-                        <span class="text-base">${dia.getDate()}</span>
-                    </div>
-                `;
+                weekDaysContainer.innerHTML += `<div class="flex flex-col items-center"><span class="text-xs text-gray-500">${diasNombres[i]}</span><span class="text-base">${dia.getDate()}</span></div>`;
             }
 
-            // Renderizar Filas de Coches
             coches.forEach(coche => {
                 const row = document.createElement('div');
                 row.className = 'flex items-center gap-1';
                 
-                // Etiqueta del Coche (Círculo)
-                let rowHtml = `
-                    <div class="w-16 flex-shrink-0 flex items-center justify-center">
-                        <div class="w-14 h-14 rounded-full border border-gray-400 flex items-center justify-center bg-gray-50 shadow-sm">
-                            <span class="text-xs font-semibold text-gray-700 text-center leading-tight">${coche.replace(' ', '<br>')}</span>
-                        </div>
-                    </div>
-                    <div class="flex-1 flex justify-around">
-                `;
+                let rowHtml = `<div class="w-16 flex-shrink-0 flex items-center justify-center"><div class="w-14 h-14 rounded-full border border-gray-400 flex items-center justify-center bg-gray-50 shadow-sm"><span class="text-xs font-semibold text-gray-700 text-center leading-tight">${coche.replace(' ', '<br>')}</span></div></div><div class="flex-1 flex justify-around">`;
 
-                // Renderizar los 7 días (Mañana y Tarde)
                 fechasSemana.forEach(fechaObj => {
-                    const fechaStr = fechaObj.toISOString().split('T')[0];
+                    // Cuidamos el formato timezone para no desajustar los días
+                    const fechaStr = new Date(fechaObj.getTime() - (fechaObj.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
                     
-                    // Comprobar estado en memoria
                     const idM = `${coche}_${fechaStr}_Mañana`;
                     const idT = `${coche}_${fechaStr}_Tarde`;
                     
-                    const estadoM = reservasActivas.has(idM) ? 'bg-ocupado' : 'bg-libre';
-                    const estadoT = reservasActivas.has(idT) ? 'bg-ocupado' : 'bg-libre';
+                    const ocupadoM = reservasActivas.has(idM);
+                    const ocupadoT = reservasActivas.has(idT);
                     
-                    const textM = reservasActivas.has(idM) ? 'M' : 'M'; // Se puede cambiar icono
-                    const textT = reservasActivas.has(idT) ? 'T' : 'T';
+                    const estadoM = ocupadoM ? 'bg-ocupado' : 'bg-libre';
+                    const estadoT = ocupadoT ? 'bg-ocupado' : 'bg-libre';
+
+                    // Si está ocupado, al hacer clic abre el modal de info. Si está libre, abre el modal de reserva.
+                    const clickM = ocupadoM ? `mostrarInfo('${reservasActivas.get(idM)}')` : `abrirModal('${coche}', '${fechaStr}', 'Mañana', '${fechaObj.toLocaleDateString()}')`;
+                    const clickT = ocupadoT ? `mostrarInfo('${reservasActivas.get(idT)}')` : `abrirModal('${coche}', '${fechaStr}', 'Tarde', '${fechaObj.toLocaleDateString()}')`;
 
                     rowHtml += `
                         <div class="flex flex-col w-8 shadow-sm rounded-full bg-white border border-gray-100">
-                            <!-- Turno Mañana -->
-                            <button class="slot-btn h-9 rounded-t-full rounded-b-sm ${estadoM} font-bold text-sm flex items-center justify-center transition-colors border-b border-white border-opacity-30"
-                                onclick="abrirModal('${coche}', '${fechaStr}', 'Mañana', '${fechaObj.toLocaleDateString()}')">
-                                ${textM}
-                            </button>
-                            <!-- Espacio separador (como en el dibujo) -->
+                            <button class="slot-btn h-9 rounded-t-full rounded-b-sm ${estadoM} font-bold text-sm border-b border-white border-opacity-30" onclick="${clickM}">M</button>
                             <div class="h-0.5 bg-white"></div>
-                            <!-- Turno Tarde -->
-                            <button class="slot-btn h-9 rounded-b-full rounded-t-sm ${estadoT} font-bold text-sm flex items-center justify-center transition-colors border-t border-white border-opacity-30"
-                                onclick="abrirModal('${coche}', '${fechaStr}', 'Tarde', '${fechaObj.toLocaleDateString()}')">
-                                ${textT}
-                            </button>
+                            <button class="slot-btn h-9 rounded-b-full rounded-t-sm ${estadoT} font-bold text-sm border-t border-white border-opacity-30" onclick="${clickT}">T</button>
                         </div>
                     `;
                 });
@@ -206,83 +193,58 @@
             });
         }
 
-        // Navegación de semanas
-        document.getElementById('prev-week').addEventListener('click', () => {
-            currentDate.setDate(currentDate.getDate() - 7);
-            renderApp();
-        });
-        document.getElementById('next-week').addEventListener('click', () => {
-            currentDate.setDate(currentDate.getDate() + 7);
-            renderApp();
-        });
+        document.getElementById('prev-week').addEventListener('click', () => { currentDate.setDate(currentDate.getDate() - 7); renderApp(); });
+        document.getElementById('next-week').addEventListener('click', () => { currentDate.setDate(currentDate.getDate() + 7); renderApp(); });
 
-        // Lógica del Modal
-        window.abrirModal = function(coche, fechaISO, turno, fechaTexto) {
-            const reservaId = `${coche}_${fechaISO}_${turno}`;
-            
-            // Si ya está ocupado, no dejamos reservar de nuevo (en esta versión visual)
-            if(reservasActivas.has(reservaId)) {
-                alert("Este turno ya está ocupado.");
-                return;
-            }
-
-            reservaPendiente = { coche, fecha: fechaISO, turno, id: reservaId };
-            
+        // Lógica de Modales
+        let reservaPendiente = null;
+        function abrirModal(coche, fechaISO, turno, fechaTexto) {
+            reservaPendiente = { coche, fecha: fechaISO, turno, id: `${coche}_${fechaISO}_${turno}` };
             document.getElementById('modalCoche').innerText = coche;
             document.getElementById('modalFecha').innerText = fechaTexto;
             document.getElementById('modalTurno').innerText = turno;
-            document.getElementById('inputNombre').value = '';
             
-            modal.classList.remove('hidden');
-        };
+            // Sugerir nombre si ya reservó antes en esta sesión
+            const ultimoNombre = localStorage.getItem('ultimoNombreCoches');
+            if(ultimoNombre) document.getElementById('inputNombre').value = ultimoNombre;
+            
+            document.getElementById('reservaModal').classList.remove('hidden');
+        }
 
-        document.getElementById('closeModalBtn').addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
+        document.getElementById('closeModalBtn').addEventListener('click', () => document.getElementById('reservaModal').classList.add('hidden'));
 
-        // Enviar Reserva
+        function mostrarInfo(nombre) {
+            document.getElementById('infoNombre').innerText = nombre;
+            document.getElementById('infoModal').classList.remove('hidden');
+        }
+        function cerrarInfoModal() { document.getElementById('infoModal').classList.add('hidden'); }
+
+        // Guardar Reserva
         document.getElementById('formReserva').addEventListener('submit', function(e) {
             e.preventDefault();
             const nombre = document.getElementById('inputNombre').value;
-            const btn = document.getElementById('btnConfirmar');
+            localStorage.setItem('ultimoNombreCoches', nombre); // Guardar iniciales localmente
             
-            // UI Loading
-            const originalText = btn.innerHTML;
+            const btn = document.getElementById('btnConfirmar');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             btn.disabled = true;
 
-            // Preparamos los datos tal y como espera tu GAS (Array con un objeto)
-            const payload = [{
-                fecha: reservaPendiente.fecha,
-                nombre: nombre,
-                coche: reservaPendiente.coche,
-                turno: reservaPendiente.turno
-            }];
+            const payload = [{ fecha: reservaPendiente.fecha, nombre: nombre, coche: reservaPendiente.coche, turno: reservaPendiente.turno }];
 
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             .then(() => {
-                // Éxito: Marcar como ocupado localmente y repintar
-                reservasActivas.add(reservaPendiente.id);
+                reservasActivas.set(reservaPendiente.id, nombre);
                 renderApp();
-                modal.classList.add('hidden');
+                document.getElementById('reservaModal').classList.add('hidden');
             })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("Hubo un error al reservar.");
-            })
-            .finally(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
+            .catch(e => alert("Error al guardar."))
+            .finally(() => { btn.innerHTML = 'Reservar'; btn.disabled = false; });
         });
 
-        // Iniciar la app
-        renderApp();
+        // Al iniciar la aplicación, disparar la carga desde Google Sheets
+        window.onload = cargarDatos;
+
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
     </script>
 </body>
 </html>
