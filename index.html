@@ -28,7 +28,6 @@
         
         <header class="bg-teal-header text-white pt-6 pb-4 px-4 rounded-b-xl shadow-md z-10 relative">
             <div class="flex items-center justify-between mb-4">
-                <!-- Botón navegar al pasado -->
                 <button id="prev-week" class="w-8 h-8 flex items-center justify-center rounded-full bg-white bg-opacity-20 hover:bg-opacity-40 transition">
                     <i class="fas fa-chevron-left text-white text-sm"></i>
                 </button>
@@ -38,12 +37,10 @@
                     <h1 class="text-xl font-light tracking-wide">COCHES</h1>
                 </div>
 
-                <!-- Botón navegar al futuro -->
                 <button id="next-week" class="w-8 h-8 flex items-center justify-center rounded-full bg-white bg-opacity-20 hover:bg-opacity-40 transition mr-2">
                     <i class="fas fa-chevron-right text-white text-sm"></i>
                 </button>
 
-                <!-- Botón Refresh -->
                 <button onclick="cargarDatos()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-teal-700 transition">
                     <i class="fas fa-sync-alt text-white text-sm"></i>
                 </button>
@@ -56,14 +53,13 @@
         </div>
 
         <main class="p-2 mt-4">
-            <!-- AQUÍ ESTÁ LA MAGIA DE ALINEACIÓN: Un Grid de 8 columnas -->
             <div id="calendar-grid" class="grid grid-cols-[55px_repeat(7,1fr)] gap-x-1 gap-y-3 px-1 items-end">
                 <!-- Se inyecta con Javascript -->
             </div>
         </main>
     </div>
 
-    <!-- MODALES Ocultos (Reserva e Info) -->
+    <!-- MODALES -->
     <div id="reservaModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-4">
@@ -100,10 +96,17 @@
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7RyhObzV_0lLV4Wc_10BSCvY6Y0iAUWKAJt6gsH641xsEXvQtzPSgb3X_jfuMGXkLgw/exec';
         
-        const coches = ["Coche 1", "Coche 2", "Coche 3", "Coche 4", "Coche 5"];
-        const diasNombres = ['D', 'L', 'M', 'X', 'J', 'V', 'S']; // getDay(): Domingo = 0
+        // Estructura de coches con su ID técnico (para el backend) y su Alias (para la pantalla)
+        const coches = [
+            { id: "QASHQAI- Blanco", alias: "Qashqai<br>Blanco" },
+            { id: "POLO", alias: "Polo" },
+            { id: "KONA", alias: "Kona" },
+            { id: "ATECA", alias: "Ateca" },
+            { id: "Qashqai gris", alias: "Qashqai<br>Gris" }
+        ];
+
+        const diasNombres = ['D', 'L', 'M', 'X', 'J', 'V', 'S']; 
         
-        // Empieza SIEMPRE en el día de hoy
         let startDate = new Date();
         startDate.setHours(0,0,0,0);
         
@@ -128,8 +131,7 @@
             
             const todayStr = new Date().toDateString();
             
-            // 1. DIBUJAR CABECERAS
-            let htmlContent = `<div class="flex items-center justify-center"></div>`; // Espacio vacío esquina superior izq
+            let htmlContent = `<div class="flex items-center justify-center"></div>`; 
             
             const fechasSemana = [];
             for (let i = 0; i < 7; i++) {
@@ -150,12 +152,11 @@
             }
             gridContainer.innerHTML += htmlContent;
 
-            // 2. DIBUJAR COCHES Y TURNOS
             coches.forEach(coche => {
                 let rowHtml = `
                     <div class="flex items-center justify-center">
-                        <div class="w-11 h-11 rounded-full border border-gray-300 bg-gray-50 shadow-sm flex items-center justify-center text-[10px] font-bold text-gray-700 text-center leading-tight">
-                            ${coche.replace(' ', '<br>')}
+                        <div class="w-11 h-11 rounded-full border border-gray-300 bg-gray-50 shadow-sm flex items-center justify-center text-[9px] font-bold text-gray-700 text-center leading-tight">
+                            ${coche.alias}
                         </div>
                     </div>
                 `;
@@ -163,14 +164,15 @@
                 fechasSemana.forEach(fechaObj => {
                     const fechaStr = new Date(fechaObj.getTime() - (fechaObj.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
                     
-                    const idM = `${coche}_${fechaStr}_Mañana`;
-                    const idT = `${coche}_${fechaStr}_Tarde`;
+                    // Comprobamos usando el ID técnico (ej: "QASHQAI- Blanco")
+                    const idM = `${coche.id}_${fechaStr}_Mañana`;
+                    const idT = `${coche.id}_${fechaStr}_Tarde`;
                     
                     const ocupadoM = reservasActivas.has(idM);
                     const ocupadoT = reservasActivas.has(idT);
                     
-                    const clickM = ocupadoM ? `mostrarInfo('${reservasActivas.get(idM)}')` : `abrirModal('${coche}', '${fechaStr}', 'Mañana', '${fechaObj.toLocaleDateString()}')`;
-                    const clickT = ocupadoT ? `mostrarInfo('${reservasActivas.get(idT)}')` : `abrirModal('${coche}', '${fechaStr}', 'Tarde', '${fechaObj.toLocaleDateString()}')`;
+                    const clickM = ocupadoM ? `mostrarInfo('${reservasActivas.get(idM)}')` : `abrirModal('${coche.id}', '${coche.alias}', '${fechaStr}', 'Mañana', '${fechaObj.toLocaleDateString()}')`;
+                    const clickT = ocupadoT ? `mostrarInfo('${reservasActivas.get(idT)}')` : `abrirModal('${coche.id}', '${coche.alias}', '${fechaStr}', 'Tarde', '${fechaObj.toLocaleDateString()}')`;
 
                     rowHtml += `
                         <div class="flex flex-col shadow-sm rounded-full bg-white border border-gray-100 h-16 w-full max-w-[40px] mx-auto">
@@ -184,14 +186,13 @@
             });
         }
 
-        // Navegación (Días pasados/futuros)
         document.getElementById('prev-week').addEventListener('click', () => { startDate.setDate(startDate.getDate() - 7); renderApp(); });
         document.getElementById('next-week').addEventListener('click', () => { startDate.setDate(startDate.getDate() + 7); renderApp(); });
 
         let reservaPendiente = null;
-        function abrirModal(coche, fechaISO, turno, fechaTexto) {
-            reservaPendiente = { coche, fecha: fechaISO, turno, id: `${coche}_${fechaISO}_${turno}` };
-            document.getElementById('modalCoche').innerText = coche;
+        function abrirModal(cocheId, cocheAlias, fechaISO, turno, fechaTexto) {
+            reservaPendiente = { coche: cocheId, fecha: fechaISO, turno, id: `${cocheId}_${fechaISO}_${turno}` };
+            document.getElementById('modalCoche').innerHTML = cocheAlias;
             document.getElementById('modalFecha').innerText = fechaTexto;
             document.getElementById('modalTurno').innerText = turno;
             
