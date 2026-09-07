@@ -59,44 +59,41 @@
         </main>
     </div>
 
-    <!-- MODALES -->
+    <!-- MODAL DE RESERVA (Nuevo / Editar / Borrar) -->
     <div id="reservaModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-teal-800">Nueva Reserva</h2>
-                <button id="closeModalBtn" class="text-gray-400 text-2xl">&times;</button>
+                <h2 id="modalTitle" class="text-xl font-bold text-teal-800">Nueva Reserva</h2>
+                <button id="closeModalBtn" class="text-gray-400 text-2xl hover:text-gray-600 transition">&times;</button>
             </div>
             <div class="mb-4 text-gray-600">
                 <p><strong>Vehículo:</strong> <span id="modalCoche"></span></p>
                 <p><strong>Fecha:</strong> <span id="modalFecha"></span> (<span id="modalTurno"></span>)</p>
             </div>
+            
             <form id="formReserva">
                 <div class="mb-5">
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Nombre / Horario</label>
-                    <input type="text" id="inputNombre" required placeholder="Ej: Álvaro o 12-14h" class="w-full border-2 border-gray-200 rounded-lg p-3 text-lg">
+                    <!-- Eliminado 'required' para permitir enviar un campo vacío (borrar) -->
+                    <input type="text" id="inputNombre" placeholder="Ej: Álvaro o 12-14h (Déjalo en blanco para borrar)" class="w-full border-2 border-gray-200 rounded-lg p-3 text-lg focus:border-teal-500 focus:outline-none transition">
                 </div>
-                <button type="submit" id="btnConfirmar" class="w-full bg-teal-600 text-white font-bold py-3 rounded-lg flex items-center justify-center text-lg shadow-md">
-                    Guardar
-                </button>
+                
+                <div class="flex flex-col gap-2">
+                    <button type="submit" id="btnConfirmar" class="w-full bg-teal-600 text-white font-bold py-3 rounded-lg flex items-center justify-center text-lg shadow-md transition hover:bg-teal-700">
+                        Guardar
+                    </button>
+                    <!-- Botón explícito para borrar, más visible si se está editando -->
+                    <button type="button" id="btnBorrar" class="hidden w-full bg-red-100 text-red-600 font-bold py-3 rounded-lg flex items-center justify-center text-lg transition hover:bg-red-200">
+                        <i class="fas fa-trash-alt mr-2"></i> Borrar Reserva
+                    </button>
+                </div>
             </form>
-        </div>
-    </div>
-
-    <div id="infoModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl w-full max-w-xs p-6 shadow-2xl text-center">
-            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-500 text-2xl">
-                <i class="fas fa-car-side"></i>
-            </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-2">Vehículo Ocupado</h3>
-            <p class="text-gray-600 mb-6">Reservado por / Horario:<br><strong class="text-lg text-teal-800" id="infoNombre"></strong></p>
-            <button onclick="cerrarInfoModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-lg transition">Aceptar</button>
         </div>
     </div>
 
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7RyhObzV_0lLV4Wc_10BSCvY6Y0iAUWKAJt6gsH641xsEXvQtzPSgb3X_jfuMGXkLgw/exec';
         
-        // Estructura de coches con su ID técnico (para el backend) y su Alias (para la pantalla)
         const coches = [
             { id: "QASHQAI- Blanco", alias: "Qashqai<br>Blanco" },
             { id: "POLO", alias: "Polo" },
@@ -164,15 +161,15 @@
                 fechasSemana.forEach(fechaObj => {
                     const fechaStr = new Date(fechaObj.getTime() - (fechaObj.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
                     
-                    // Comprobamos usando el ID técnico (ej: "QASHQAI- Blanco")
                     const idM = `${coche.id}_${fechaStr}_Mañana`;
                     const idT = `${coche.id}_${fechaStr}_Tarde`;
                     
                     const ocupadoM = reservasActivas.has(idM);
                     const ocupadoT = reservasActivas.has(idT);
                     
-                    const clickM = ocupadoM ? `mostrarInfo('${reservasActivas.get(idM)}')` : `abrirModal('${coche.id}', '${coche.alias}', '${fechaStr}', 'Mañana', '${fechaObj.toLocaleDateString()}')`;
-                    const clickT = ocupadoT ? `mostrarInfo('${reservasActivas.get(idT)}')` : `abrirModal('${coche.id}', '${coche.alias}', '${fechaStr}', 'Tarde', '${fechaObj.toLocaleDateString()}')`;
+                    // Ambos clicks (Libre u Ocupado) abren el mismo modal, pero con comportamientos diferentes
+                    const clickM = `abrirModal('${coche.id}', '${coche.alias}', '${fechaStr}', 'Mañana', '${fechaObj.toLocaleDateString()}')`;
+                    const clickT = `abrirModal('${coche.id}', '${coche.alias}', '${fechaStr}', 'Tarde', '${fechaObj.toLocaleDateString()}')`;
 
                     rowHtml += `
                         <div class="flex flex-col shadow-sm rounded-full bg-white border border-gray-100 h-16 w-full max-w-[40px] mx-auto">
@@ -190,32 +187,60 @@
         document.getElementById('next-week').addEventListener('click', () => { startDate.setDate(startDate.getDate() + 7); renderApp(); });
 
         let reservaPendiente = null;
+        
         function abrirModal(cocheId, cocheAlias, fechaISO, turno, fechaTexto) {
             reservaPendiente = { coche: cocheId, fecha: fechaISO, turno, id: `${cocheId}_${fechaISO}_${turno}` };
+            
             document.getElementById('modalCoche').innerHTML = cocheAlias;
             document.getElementById('modalFecha').innerText = fechaTexto;
             document.getElementById('modalTurno').innerText = turno;
             
-            const ultimoNombre = localStorage.getItem('ultimoNombreCoches');
-            if(ultimoNombre) document.getElementById('inputNombre').value = ultimoNombre;
+            const inputElement = document.getElementById('inputNombre');
+            const btnBorrar = document.getElementById('btnBorrar');
+            const title = document.getElementById('modalTitle');
+            
+            // Comprobar si ya existe una reserva
+            if (reservasActivas.has(reservaPendiente.id)) {
+                // Modo Edición
+                title.innerText = "Editar Reserva";
+                title.className = "text-xl font-bold text-orange-600"; // Cambiar color para indicar edición
+                inputElement.value = reservasActivas.get(reservaPendiente.id);
+                btnBorrar.classList.remove('hidden'); // Mostrar botón de borrar
+            } else {
+                // Modo Nueva Reserva
+                title.innerText = "Nueva Reserva";
+                title.className = "text-xl font-bold text-teal-800";
+                
+                // Sugerir último nombre usado
+                const ultimoNombre = localStorage.getItem('ultimoNombreCoches');
+                inputElement.value = ultimoNombre ? ultimoNombre : '';
+                btnBorrar.classList.add('hidden'); // Ocultar botón de borrar
+            }
             
             document.getElementById('reservaModal').classList.remove('hidden');
+            // Enfocar el input para escribir rápido
+            setTimeout(() => inputElement.focus(), 100);
         }
 
         document.getElementById('closeModalBtn').addEventListener('click', () => document.getElementById('reservaModal').classList.add('hidden'));
 
-        function mostrarInfo(nombre) {
-            document.getElementById('infoNombre').innerText = nombre;
-            document.getElementById('infoModal').classList.remove('hidden');
-        }
-        function cerrarInfoModal() { document.getElementById('infoModal').classList.add('hidden'); }
+        // Manejar el botón de Borrar directamente
+        document.getElementById('btnBorrar').addEventListener('click', () => {
+            document.getElementById('inputNombre').value = ''; // Vaciar el input
+            document.getElementById('formReserva').dispatchEvent(new Event('submit')); // Lanzar el submit
+        });
 
         document.getElementById('formReserva').addEventListener('submit', function(e) {
             e.preventDefault();
-            const nombre = document.getElementById('inputNombre').value;
-            localStorage.setItem('ultimoNombreCoches', nombre); 
+            const nombre = document.getElementById('inputNombre').value.trim();
+            
+            // Si hay nombre, guardarlo localmente para la próxima vez
+            if (nombre !== '') {
+                localStorage.setItem('ultimoNombreCoches', nombre); 
+            }
             
             const btn = document.getElementById('btnConfirmar');
+            const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             btn.disabled = true;
 
@@ -224,16 +249,24 @@
                 body: JSON.stringify([{ fecha: reservaPendiente.fecha, nombre: nombre, coche: reservaPendiente.coche, turno: reservaPendiente.turno }]) 
             })
             .then(() => {
-                reservasActivas.set(reservaPendiente.id, nombre);
+                if (nombre === '') {
+                    // Si se envió vacío, lo eliminamos del estado local
+                    reservasActivas.delete(reservaPendiente.id);
+                } else {
+                    // Actualizamos o creamos la reserva
+                    reservasActivas.set(reservaPendiente.id, nombre);
+                }
+                
                 renderApp();
                 document.getElementById('reservaModal').classList.add('hidden');
             })
-            .catch(e => alert("Error al guardar."))
-            .finally(() => { btn.innerHTML = 'Guardar'; btn.disabled = false; });
+            .catch(e => alert("Error al guardar los cambios."))
+            .finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
         });
 
         window.onload = cargarDatos;
 
+        // Limpiar caché vieja si la versión cambia
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
     </script>
 </body>
