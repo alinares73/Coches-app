@@ -2,211 +2,287 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reserva de Coches</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Coches Ciudadela</title>
     
-    <!-- Enlace al Manifest para PWA -->
+    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
-    <!-- Color del tema para la barra de estado en móviles -->
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#134e4a"> <!-- Teal oscuro -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        /* Estilos personalizados para los botones de selección de turno */
-        .turno-btn.selected {
-            background-color: #3b82f6; /* blue-500 */
-            color: white;
-            border-color: #3b82f6;
-        }
+        /* Deshabilitar selección de texto y zoom doble en móviles para que parezca app nativa */
+        body { -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+        
+        /* Colores personalizados del diseño */
+        .bg-teal-header { background-color: #115e59; } /* Teal 800 */
+        .bg-libre { background-color: #6ee7b7; color: #064e3b; } /* Mint / Teal 300 */
+        .bg-ocupado { background-color: #fb923c; color: #7c2d12; } /* Orange 400 */
+        
+        /* Efecto pulsación */
+        .slot-btn:active { transform: scale(0.95); }
     </style>
 
-    <!-- Registro del Service Worker para convertirla en PWA -->
     <script>
+      // Registro del Service Worker para PWA
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('Service Worker registrado con éxito'))
-            .catch(err => console.error('Error al registrar Service Worker', err));
+          navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
         });
       }
     </script>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans">
+<body class="bg-gray-100 min-h-screen font-sans flex flex-col items-center">
 
-    <!-- Encabezado -->
-    <header class="bg-blue-600 text-white shadow-md py-4">
-        <div class="container mx-auto px-4 flex items-center justify-center">
-            <i class="fas fa-car text-2xl mr-3"></i>
-            <h1 class="text-xl font-bold">Reserva de Coches</h1>
-        </div>
-    </header>
-
-    <main class="container mx-auto px-4 py-6 max-w-3xl">
+    <!-- Contenedor principal estilo móvil -->
+    <div class="w-full max-w-md bg-white min-h-screen shadow-xl relative pb-20">
         
-        <!-- Formulario principal -->
-        <form id="reservaForm" class="space-y-6">
+        <!-- Cabecera Teal -->
+        <header class="bg-teal-header text-white pt-6 pb-4 px-4 rounded-b-xl shadow-md z-10 relative">
+            <div class="flex items-center justify-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center">
+                    <i class="fas fa-car text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-light tracking-wide">COCHES CIUDADELA</h1>
+            </div>
             
-            <!-- Selector de Fecha -->
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                <label for="fecha" class="block text-sm font-medium text-gray-700 mb-1">Día de la reserva</label>
-                <input type="date" id="fecha" name="fecha" required 
-                    class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            <!-- Barra de días de la semana -->
+            <div class="flex items-center justify-between bg-white text-gray-800 rounded-lg px-2 py-2 mx-1 shadow-sm font-semibold text-sm">
+                <button id="prev-week" class="px-2 text-teal-700 hover:text-teal-900"><i class="fas fa-chevron-left"></i></button>
+                <div id="week-days" class="flex flex-1 justify-around text-center">
+                    <!-- JS inyectará los días aquí: L1 M2 X3... -->
+                </div>
+                <button id="next-week" class="px-2 text-teal-700 hover:text-teal-900"><i class="fas fa-chevron-right"></i></button>
             </div>
+        </header>
 
-            <!-- Nombre del residente -->
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">Tu Nombre</label>
-                <input type="text" id="nombre" name="nombre" placeholder="Ej. Álvaro" required 
-                    class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+        <!-- Cuadrícula de Coches (Grid) -->
+        <main class="p-3 mt-2">
+            <div id="grid-container" class="flex flex-col gap-3">
+                <!-- JS inyectará las filas de coches aquí -->
             </div>
+        </main>
 
-            <!-- Lista de Coches -->
-            <div class="space-y-4" id="coches-container">
-                <!-- Las tarjetas de los coches se generarán dinámicamente con JS -->
-            </div>
-
-            <!-- Botón de Envío -->
-            <button type="submit" id="btn-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-200 flex justify-center items-center">
-                <i class="fas fa-check-circle mr-2"></i> Confirmar Reserva
+        <!-- Botón inferior (Añadir viajes) -->
+        <div class="fixed bottom-6 w-full max-w-md px-6 z-10 flex justify-center pointer-events-none">
+            <button class="pointer-events-auto bg-white border-2 border-gray-200 text-gray-800 font-bold py-3 px-8 rounded-full shadow-lg text-lg tracking-wide hover:bg-gray-50 flex items-center gap-2">
+                AÑADIR VIAJES
             </button>
-        </form>
-
-        <!-- Mensaje de confirmación -->
-        <div id="mensajeExito" class="hidden mt-6 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded" role="alert">
-            <p class="font-bold">¡Reserva enviada!</p>
-            <p>Los datos se han registrado correctamente en la hoja de cálculo.</p>
         </div>
 
-    </main>
+    </div>
 
-    <script>
-        // Configuración de los 5 coches
-        const coches = [
-            { id: 1, nombre: "Coche 1" },
-            { id: 2, nombre: "Coche 2" },
-            { id: 3, nombre: "Coche 3" },
-            { id: 4, nombre: "Coche 4" },
-            { id: 5, nombre: "Coche 5" }
-        ];
-
-        const container = document.getElementById('coches-container');
-
-        // Generar las tarjetas de los coches
-        coches.forEach(coche => {
-            const card = document.createElement('div');
-            card.className = 'bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4';
+    <!-- MODAL DE RESERVA (Oculto por defecto) -->
+    <div id="reservaModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl transform transition-transform scale-100">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-teal-800">Confirmar Reserva</h2>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
             
-            card.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <div class="bg-gray-100 p-3 rounded-full">
-                        <i class="fas fa-car-side text-gray-600"></i>
-                    </div>
-                    <span class="font-semibold text-gray-800 text-lg">${coche.nombre}</span>
+            <div class="mb-4 text-gray-600">
+                <p><strong>Coche:</strong> <span id="modalCoche"></span></p>
+                <p><strong>Fecha:</strong> <span id="modalFecha"></span></p>
+                <p><strong>Turno:</strong> <span id="modalTurno"></span></p>
+            </div>
+
+            <form id="formReserva">
+                <div class="mb-5">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Tu Nombre</label>
+                    <input type="text" id="inputNombre" required placeholder="Ej. Álvaro" 
+                           class="w-full border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-teal-500 text-lg">
                 </div>
                 
-                <div class="flex gap-2">
-                    <button type="button" class="turno-btn flex-1 sm:flex-none border border-gray-300 rounded-md py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors" data-coche="${coche.id}" data-turno="Mañana">
-                        <i class="fas fa-sun mr-1"></i> Mañana
-                    </button>
-                    <button type="button" class="turno-btn flex-1 sm:flex-none border border-gray-300 rounded-md py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors" data-coche="${coche.id}" data-turno="Tarde">
-                        <i class="fas fa-moon mr-1"></i> Tarde
-                    </button>
-                </div>
-            `;
-            container.appendChild(card);
-        });
+                <button type="submit" id="btnConfirmar" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-lg flex items-center justify-center transition-colors text-lg">
+                    Reservar Coche
+                </button>
+            </form>
+        </div>
+    </div>
 
-        // Lógica para seleccionar turnos (Mañana / Tarde)
-        const selecciones = {}; // Guarda la selección: { cocheId: [turno] }
+    <script>
+        // --- CONFIGURACIÓN DE TU SCRIPT DE GOOGLE ---
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7RyhObzV_0lLV4Wc_10BSCvY6Y0iAUWKAJt6gsH641xsEXvQtzPSgb3X_jfuMGXkLgw/exec';
 
-        document.querySelectorAll('.turno-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                this.classList.toggle('selected');
-                const cocheId = this.getAttribute('data-coche');
-                const turno = this.getAttribute('data-turno');
+        const coches = ["Coche 1", "Coche 2", "Coche 3", "Coche 4", "Coche 5"];
+        const diasNombres = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+        
+        let currentDate = new Date(); // Fecha de referencia (hoy)
+        
+        // Estado temporal en memoria de las reservas (coche_fecha_turno)
+        // Ejemplo de ID: "Coche 1_2026-09-07_Mañana"
+        const reservasActivas = new Set();
 
-                if (!selecciones[cocheId]) {
-                    selecciones[cocheId] = [];
-                }
+        // Variables para el Modal
+        let reservaPendiente = null;
+        const modal = document.getElementById('reservaModal');
 
-                if (this.classList.contains('selected')) {
-                    selecciones[cocheId].push(turno);
-                } else {
-                    selecciones[cocheId] = selecciones[cocheId].filter(t => t !== turno);
-                }
-            });
-        });
+        // Función para obtener el lunes de la semana actual
+        function getLunes(d) {
+            d = new Date(d);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // ajustar si es domingo
+            return new Date(d.setDate(diff));
+        }
 
-        // Poner la fecha de hoy por defecto
-        document.getElementById('fecha').valueAsDate = new Date();
-
-        // Manejar el envío del formulario
-        document.getElementById('reservaForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        // Renderizar la semana en la cabecera y el grid
+        function renderApp() {
+            const lunes = getLunes(currentDate);
+            const weekDaysContainer = document.getElementById('week-days');
+            const gridContainer = document.getElementById('grid-container');
             
-            const fecha = document.getElementById('fecha').value;
-            const nombre = document.getElementById('nombre').value;
-            
-            // Recopilar todas las reservas realizadas
-            const reservas = [];
-            for (const [cocheId, turnos] of Object.entries(selecciones)) {
-                turnos.forEach(turno => {
-                    reservas.push({
-                        fecha: fecha,
-                        nombre: nombre,
-                        coche: `Coche ${cocheId}`,
-                        turno: turno
-                    });
-                });
+            weekDaysContainer.innerHTML = '';
+            gridContainer.innerHTML = '';
+
+            // Array de fechas de la semana
+            const fechasSemana = [];
+            for (let i = 0; i < 7; i++) {
+                const dia = new Date(lunes);
+                dia.setDate(lunes.getDate() + i);
+                fechasSemana.push(dia);
+                
+                // Cabecera de días (L1, M2...)
+                weekDaysContainer.innerHTML += `
+                    <div class="flex flex-col items-center">
+                        <span class="text-xs text-gray-500">${diasNombres[i]}</span>
+                        <span class="text-base">${dia.getDate()}</span>
+                    </div>
+                `;
             }
 
-            if (reservas.length === 0) {
-                alert("Por favor, selecciona al menos un coche y un turno.");
+            // Renderizar Filas de Coches
+            coches.forEach(coche => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-1';
+                
+                // Etiqueta del Coche (Círculo)
+                let rowHtml = `
+                    <div class="w-16 flex-shrink-0 flex items-center justify-center">
+                        <div class="w-14 h-14 rounded-full border border-gray-400 flex items-center justify-center bg-gray-50 shadow-sm">
+                            <span class="text-xs font-semibold text-gray-700 text-center leading-tight">${coche.replace(' ', '<br>')}</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 flex justify-around">
+                `;
+
+                // Renderizar los 7 días (Mañana y Tarde)
+                fechasSemana.forEach(fechaObj => {
+                    const fechaStr = fechaObj.toISOString().split('T')[0];
+                    
+                    // Comprobar estado en memoria
+                    const idM = `${coche}_${fechaStr}_Mañana`;
+                    const idT = `${coche}_${fechaStr}_Tarde`;
+                    
+                    const estadoM = reservasActivas.has(idM) ? 'bg-ocupado' : 'bg-libre';
+                    const estadoT = reservasActivas.has(idT) ? 'bg-ocupado' : 'bg-libre';
+                    
+                    const textM = reservasActivas.has(idM) ? 'M' : 'M'; // Se puede cambiar icono
+                    const textT = reservasActivas.has(idT) ? 'T' : 'T';
+
+                    rowHtml += `
+                        <div class="flex flex-col w-8 shadow-sm rounded-full bg-white border border-gray-100">
+                            <!-- Turno Mañana -->
+                            <button class="slot-btn h-9 rounded-t-full rounded-b-sm ${estadoM} font-bold text-sm flex items-center justify-center transition-colors border-b border-white border-opacity-30"
+                                onclick="abrirModal('${coche}', '${fechaStr}', 'Mañana', '${fechaObj.toLocaleDateString()}')">
+                                ${textM}
+                            </button>
+                            <!-- Espacio separador (como en el dibujo) -->
+                            <div class="h-0.5 bg-white"></div>
+                            <!-- Turno Tarde -->
+                            <button class="slot-btn h-9 rounded-b-full rounded-t-sm ${estadoT} font-bold text-sm flex items-center justify-center transition-colors border-t border-white border-opacity-30"
+                                onclick="abrirModal('${coche}', '${fechaStr}', 'Tarde', '${fechaObj.toLocaleDateString()}')">
+                                ${textT}
+                            </button>
+                        </div>
+                    `;
+                });
+
+                rowHtml += `</div>`;
+                row.innerHTML = rowHtml;
+                gridContainer.appendChild(row);
+            });
+        }
+
+        // Navegación de semanas
+        document.getElementById('prev-week').addEventListener('click', () => {
+            currentDate.setDate(currentDate.getDate() - 7);
+            renderApp();
+        });
+        document.getElementById('next-week').addEventListener('click', () => {
+            currentDate.setDate(currentDate.getDate() + 7);
+            renderApp();
+        });
+
+        // Lógica del Modal
+        window.abrirModal = function(coche, fechaISO, turno, fechaTexto) {
+            const reservaId = `${coche}_${fechaISO}_${turno}`;
+            
+            // Si ya está ocupado, no dejamos reservar de nuevo (en esta versión visual)
+            if(reservasActivas.has(reservaId)) {
+                alert("Este turno ya está ocupado.");
                 return;
             }
 
-            // Cambiar el estado del botón mientras se envía
-            const btnSubmit = document.getElementById('btn-submit');
-            const originalBtnText = btnSubmit.innerHTML;
-            btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Enviando...';
-            btnSubmit.disabled = true;
+            reservaPendiente = { coche, fecha: fechaISO, turno, id: reservaId };
+            
+            document.getElementById('modalCoche').innerText = coche;
+            document.getElementById('modalFecha').innerText = fechaTexto;
+            document.getElementById('modalTurno').innerText = turno;
+            document.getElementById('inputNombre').value = '';
+            
+            modal.classList.remove('hidden');
+        };
 
-            // --- REEMPLAZA ESTO CON LA URL DE TU SCRIPT DE GOOGLE ---
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbx7RyhObzV_0lLV4Wc_10BSCvY6Y0iAUWKAJt6gsH641xsEXvQtzPSgb3X_jfuMGXkLgw/exec';
+        document.getElementById('closeModalBtn').addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
 
-            fetch(scriptURL, {
+        // Enviar Reserva
+        document.getElementById('formReserva').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('inputNombre').value;
+            const btn = document.getElementById('btnConfirmar');
+            
+            // UI Loading
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            // Preparamos los datos tal y como espera tu GAS (Array con un objeto)
+            const payload = [{
+                fecha: reservaPendiente.fecha,
+                nombre: nombre,
+                coche: reservaPendiente.coche,
+                turno: reservaPendiente.turno
+            }];
+
+            fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(reservas)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             })
             .then(() => {
-                // Restaurar formulario y limpiar selecciones
-                document.getElementById('reservaForm').reset();
-                document.querySelectorAll('.turno-btn').forEach(b => b.classList.remove('selected'));
-                for (let prop in selecciones) delete selecciones[prop];
-                document.getElementById('fecha').valueAsDate = new Date();
-                
-                // Mostrar mensaje de éxito
-                document.getElementById('mensajeExito').classList.remove('hidden');
-                setTimeout(() => {
-                    document.getElementById('mensajeExito').classList.add('hidden');
-                }, 4000);
+                // Éxito: Marcar como ocupado localmente y repintar
+                reservasActivas.add(reservaPendiente.id);
+                renderApp();
+                modal.classList.add('hidden');
             })
             .catch(error => {
-                console.error('Error enviando reserva:', error);
-                alert('Hubo un error de conexión, por favor intenta de nuevo.');
+                console.error("Error:", error);
+                alert("Hubo un error al reservar.");
             })
             .finally(() => {
-                // Restaurar el texto y el estado del botón
-                btnSubmit.innerHTML = originalBtnText;
-                btnSubmit.disabled = false;
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             });
         });
+
+        // Iniciar la app
+        renderApp();
     </script>
 </body>
 </html>
