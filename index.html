@@ -6,7 +6,7 @@
     <title>Coches Ciudadela</title>
     
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#115e59"> 
+    <meta name="theme-color" content="#0f766e"> 
     <meta name="apple-mobile-web-app-capable" content="yes">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,15 +22,16 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         #swipe-container {
-            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.2s ease;
+            transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.2s ease;
         }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen font-sans flex flex-col items-center">
 
-    <div class="w-full max-w-md bg-white min-h-screen shadow-2xl relative pb-20 overflow-hidden">
+    <div class="w-full max-w-md bg-white min-h-screen shadow-2xl relative pb-20 overflow-hidden flex flex-col">
         
-        <header class="bg-teal-header text-white pt-6 pb-4 px-4 rounded-b-2xl shadow-lg z-20 relative">
+        <!-- CABECERA PRINCIPAL -->
+        <header class="bg-teal-header text-white pt-6 pb-4 px-4 shadow-md z-30 relative">
             <div class="flex items-center justify-between">
                 <div class="w-8"></div>
                 <div class="flex items-center gap-2">
@@ -43,17 +44,26 @@
             </div>
         </header>
 
-        <div id="loading-screen" class="absolute inset-0 z-40 bg-white bg-opacity-95 flex flex-col items-center justify-center mt-24">
+        <div id="loading-screen" class="absolute inset-0 z-40 bg-white bg-opacity-95 flex flex-col items-center justify-center mt-20">
             <div class="loader mb-4"></div>
             <p class="text-teal-800 font-semibold animate-pulse tracking-wide">Sincronizando...</p>
         </div>
 
-        <main id="swipe-area" class="p-2 mt-4 relative">
-            <div id="swipe-container" class="w-full">
-                <div id="calendar-grid" class="grid grid-cols-[55px_repeat(7,1fr)] gap-x-1 gap-y-3 px-1 items-start">
-                    <!-- Se inyecta con Javascript -->
+        <!-- ZONA DE CONTENIDO (Columna Fija + Deslizable) -->
+        <main class="flex-1 flex w-full relative bg-white">
+            
+            <!-- COLUMNA FIJA: Coches -->
+            <div id="fixed-cars-col" class="w-[52px] flex-shrink-0 flex flex-col bg-gray-50 border-r border-gray-200 z-20 shadow-sm">
+                <!-- Se inyecta por JS -->
+            </div>
+
+            <!-- ÁREA DESLIZABLE: Calendario -->
+            <div id="swipe-area" class="flex-1 overflow-hidden relative bg-white">
+                <div id="swipe-container" class="w-full flex flex-col">
+                    <!-- Se inyecta por JS -->
                 </div>
             </div>
+
         </main>
     </div>
 
@@ -71,7 +81,7 @@
             <form id="formReserva">
                 <div class="mb-5">
                     <input type="text" id="inputNombre" placeholder="Tu Nombre o Horario..." class="w-full border-2 border-gray-200 rounded-xl p-3 text-lg focus:border-teal-600 focus:ring-2 focus:ring-teal-100 focus:outline-none transition">
-                    <p class="text-xs text-gray-400 mt-2 ml-1" id="hintBorrar">Déjalo en blanco para eliminar la reserva.</p>
+                    <p class="text-[11px] text-gray-500 mt-2 ml-1" id="hintBorrar">Déjalo en blanco para eliminar la reserva.</p>
                 </div>
                 <div class="flex flex-col gap-2">
                     <button type="submit" id="btnConfirmar" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl flex items-center justify-center text-lg shadow-md transition hover:bg-teal-800">
@@ -87,24 +97,26 @@
 
     <!-- MODAL DATOS TÉCNICOS COCHE -->
     <div id="infoCocheModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl w-full max-w-xs p-6 shadow-2xl">
-            <div class="flex items-center justify-center mb-4">
-                <div class="w-14 h-14 bg-teal-50 rounded-full flex items-center justify-center text-teal-700 text-2xl border border-teal-100">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-center mb-3">
+                <div class="w-12 h-12 bg-teal-50 rounded-full flex items-center justify-center text-teal-700 text-xl border border-teal-100">
                     <i class="fas fa-clipboard-list"></i>
                 </div>
             </div>
-            <h3 class="text-xl font-bold text-gray-800 text-center mb-4" id="infoCocheTitle">Datos del Vehículo</h3>
-            <div id="infoCocheContent" class="text-gray-600 text-sm bg-gray-50 p-4 rounded-xl border border-gray-100 min-h-[80px]">
+            <h3 class="text-lg font-bold text-gray-800 text-center mb-4" id="infoCocheTitle">Datos del Vehículo</h3>
+            
+            <!-- Contenedor scrollable por si hay muchos datos -->
+            <div id="infoCocheContent" class="text-gray-600 text-sm bg-gray-50 p-3 rounded-xl border border-gray-100 flex-1 overflow-y-auto">
                 <!-- Datos insertados por JS -->
             </div>
-            <button onclick="cerrarInfoCoche()" class="mt-5 w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl transition">Cerrar</button>
+            
+            <button onclick="cerrarInfoCoche()" class="mt-4 w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl transition">Cerrar</button>
         </div>
     </div>
 
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7RyhObzV_0lLV4Wc_10BSCvY6Y0iAUWKAJt6gsH641xsEXvQtzPSgb3X_jfuMGXkLgw/exec';
         
-        // Exclusivamente los 5 coches correctos
         const coches = [
             { id: "BLANCO", alias: "Qashqai<br>Blanco" },
             { id: "POLO", alias: "Polo" },
@@ -131,7 +143,6 @@
                     arrayReservas.forEach(res => reservasActivas.set(`${res.coche}_${res.fecha}_${res.turno}`, res.nombre));
                     
                     if (data.infoCoches) infoCochesGlobal = data.infoCoches;
-                    
                     renderApp(); 
                 })
                 .catch(error => { alert("Error de red. Mostrando datos locales."); renderApp(); })
@@ -139,19 +150,34 @@
         }
 
         function renderApp() {
-            const gridContainer = document.getElementById('calendar-grid');
-            gridContainer.innerHTML = '';
             const todayStr = new Date().toDateString();
+            const colCoches = document.getElementById('fixed-cars-col');
+            const colFechas = document.getElementById('swipe-container');
             
-            let htmlContent = `
-                <div class="flex items-center justify-center relative h-10 w-full">
-                    <button onclick="animarCambioSemana(-1)" class="absolute right-0 w-8 h-10 flex items-center justify-center text-teal-700 hover:text-teal-900 transition">
-                        <i class="fas fa-chevron-left text-lg"></i>
+            // 1. RENDERIZAR COLUMNA FIJA (Izquierda)
+            let fixedHtml = `
+                <div class="h-[52px] w-full flex items-center justify-center border-b border-gray-100 bg-gray-100">
+                    <button onclick="animarCambio(-1, 7)" class="w-8 h-8 flex items-center justify-center text-teal-700 hover:bg-gray-200 rounded-full transition">
+                        <i class="fas fa-chevron-left text-sm"></i>
                     </button>
                 </div>
-            `; 
+            `;
+            coches.forEach(coche => {
+                fixedHtml += `
+                    <div class="flex items-center justify-center py-[5px] h-[4.7rem]">
+                        <button onclick="mostrarDatosCoche('${coche.id}', '${coche.alias}')" class="car-btn w-[44px] h-[4.2rem] rounded-xl border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center text-[8.5px] font-bold text-gray-600 text-center leading-tight gap-[2px] transition active:bg-gray-100">
+                            <span>${coche.alias}</span>
+                            <i class="far fa-file-alt text-teal-600 text-[11px]"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            colCoches.innerHTML = fixedHtml;
+
+            // 2. RENDERIZAR ÁREA DESLIZABLE (Fechas)
+            let fechasSemana = [];
+            let headerGrid = `<div class="grid grid-cols-7 gap-x-[3px] px-1 h-[52px] border-b border-gray-100 items-center">`;
             
-            const fechasSemana = [];
             for (let i = 0; i < 7; i++) {
                 const dia = new Date(startDate);
                 dia.setDate(startDate.getDate() + i);
@@ -161,31 +187,27 @@
                 const bgClass = isToday ? 'bg-teal-50 border border-teal-200' : 'bg-transparent';
                 const textClass = isToday ? 'text-teal-800' : 'text-gray-500';
                 
+                // La flecha derecha ahora está limpia en el último día y no se sale
                 let flechaDerecha = (i === 6) ? `
-                    <button onclick="animarCambioSemana(1)" class="absolute -right-7 top-0 w-8 h-10 flex items-center justify-center text-teal-700 hover:text-teal-900 transition">
-                        <i class="fas fa-chevron-right text-lg"></i>
+                    <button onclick="animarCambio(1, 7)" class="absolute right-0 top-0 bottom-0 px-1 bg-gradient-to-l from-white via-white to-transparent text-teal-700 flex items-center z-10 hover:text-teal-900 transition">
+                        <i class="fas fa-chevron-right text-sm"></i>
                     </button>
                 ` : '';
 
-                htmlContent += `
-                    <div class="relative flex flex-col items-center justify-center rounded-lg py-1 ${bgClass}">
-                        <span class="text-[10px] ${textClass} font-bold tracking-wider">${diasNombres[dia.getDay()]}</span>
+                headerGrid += `
+                    <div class="relative flex flex-col items-center justify-center rounded-lg h-11 ${bgClass}">
+                        <span class="text-[9px] ${textClass} font-bold tracking-wider">${diasNombres[dia.getDay()]}</span>
                         <span class="text-sm font-bold ${textClass}">${dia.getDate()}</span>
                         ${flechaDerecha}
                     </div>
                 `;
             }
-            gridContainer.innerHTML += htmlContent;
-
+            headerGrid += `</div>`;
+            
+            let gridHtml = headerGrid;
+            
             coches.forEach(coche => {
-                let rowHtml = `
-                    <div class="flex items-center justify-center py-1">
-                        <button onclick="mostrarDatosCoche('${coche.id}', '${coche.alias}')" class="car-btn w-12 h-[4.2rem] rounded-xl border border-gray-200 bg-gray-50 shadow-sm flex flex-col items-center justify-center text-[9px] font-bold text-gray-600 text-center leading-tight gap-1 transition active:bg-gray-100">
-                            <span>${coche.alias}</span>
-                            <i class="far fa-file-alt text-teal-600 text-xs mt-0.5"></i>
-                        </button>
-                    </div>
-                `;
+                gridHtml += `<div class="grid grid-cols-7 gap-x-[3px] px-1 py-[5px] h-[4.7rem]">`;
                 
                 fechasSemana.forEach(fechaObj => {
                     const fechaStr = new Date(fechaObj.getTime() - (fechaObj.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
@@ -198,36 +220,41 @@
                     const clickM = `abrirModal('${coche.id}', '${coche.alias.replace('<br>',' ')}', '${fechaStr}', 'Mañana', '${fechaObj.toLocaleDateString()}')`;
                     const clickT = `abrirModal('${coche.id}', '${coche.alias.replace('<br>',' ')}', '${fechaStr}', 'Tarde', '${fechaObj.toLocaleDateString()}')`;
 
-                    const styleFreeM = "bg-white text-teal-700 border-2 border-teal-600 border-b-[1px] rounded-t-full";
-                    const styleFreeT = "bg-white text-teal-700 border-2 border-teal-600 border-t-[1px] rounded-b-full";
-                    const styleOcuM  = "bg-[#c2410c] text-white border-2 border-[#c2410c] border-b-white/40 rounded-t-full shadow-inner";
-                    const styleOcuT  = "bg-[#c2410c] text-white border-2 border-[#c2410c] border-t-white/40 rounded-b-full shadow-inner";
+                    // Diseño elegante
+                    const styleFreeM = "bg-white text-teal-700 border border-teal-500 border-b-0 rounded-t-full";
+                    const styleFreeT = "bg-white text-teal-700 border border-teal-500 border-t-0 rounded-b-full";
+                    const styleOcuM  = "bg-[#c2410c] text-white border border-[#c2410c] border-b-white/30 rounded-t-full shadow-inner";
+                    const styleOcuT  = "bg-[#c2410c] text-white border border-[#c2410c] border-t-white/30 rounded-b-full shadow-inner";
 
-                    rowHtml += `
-                        <div class="flex flex-col h-[4.2rem] w-full max-w-[38px] mx-auto py-1">
-                            <button class="slot-btn flex-1 flex items-center justify-center font-bold text-xs transition-colors ${ocupadoM ? styleOcuM : styleFreeM}" onclick="${clickM}">M</button>
-                            <button class="slot-btn flex-1 flex items-center justify-center font-bold text-xs transition-colors ${ocupadoT ? styleOcuT : styleFreeT}" onclick="${clickT}">T</button>
+                    gridHtml += `
+                        <div class="flex flex-col h-full w-full max-w-[40px] mx-auto">
+                            <button class="slot-btn flex-1 flex items-center justify-center font-bold text-[11px] transition-colors ${ocupadoM ? styleOcuM : styleFreeM}" onclick="${clickM}">M</button>
+                            <div class="h-[1px] bg-teal-100 ${ocupadoM && ocupadoT ? 'opacity-0' : ''}"></div>
+                            <button class="slot-btn flex-1 flex items-center justify-center font-bold text-[11px] transition-colors ${ocupadoT ? styleOcuT : styleFreeT}" onclick="${clickT}">T</button>
                         </div>
                     `;
                 });
-                gridContainer.innerHTML += rowHtml;
+                gridHtml += `</div>`;
             });
+            colFechas.innerHTML = gridHtml;
         }
 
-        function animarCambioSemana(direccion) {
+        // --- SISTEMA DE ANIMACIÓN ---
+        // cantidadDias = 1 para el dedo (swipe), = 7 para las flechas
+        function animarCambio(direccion, cantidadDias) {
             const container = document.getElementById('swipe-container');
             container.style.transform = `translateX(${direccion * -30}px)`;
             container.style.opacity = '0';
             
             setTimeout(() => {
-                startDate.setDate(startDate.getDate() + (7 * direccion));
+                startDate.setDate(startDate.getDate() + (cantidadDias * direccion));
                 renderApp();
                 container.style.transition = 'none';
                 container.style.transform = `translateX(${direccion * 30}px)`;
                 
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
-                        container.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.2s ease';
+                        container.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.2s ease';
                         container.style.transform = 'translateX(0)';
                         container.style.opacity = '1';
                     });
@@ -235,15 +262,17 @@
             }, 200);
         }
 
+        // Gestos Táctiles: Swipe de DÍA EN DÍA
         let touchStartX = 0;
         const swipeArea = document.getElementById('swipe-area');
         swipeArea.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, {passive: true});
         swipeArea.addEventListener('touchend', e => {
             let touchEndX = e.changedTouches[0].screenX;
-            if (touchEndX < touchStartX - 50) animarCambioSemana(1); 
-            if (touchEndX > touchStartX + 50) animarCambioSemana(-1); 
+            if (touchEndX < touchStartX - 40) animarCambio(1, 1); // +1 Día
+            if (touchEndX > touchStartX + 40) animarCambio(-1, 1); // -1 Día
         }, {passive: true});
 
+        // --- MODALES ---
         let reservaPendiente = null;
         
         function abrirModal(cocheId, cocheAlias, fechaISO, turno, fechaTexto) {
@@ -315,10 +344,16 @@
             let targetKey = Object.keys(infoCochesGlobal).find(k => k.toLowerCase().includes(cocheId.toLowerCase()));
             
             if (targetKey && infoCochesGlobal[targetKey] && infoCochesGlobal[targetKey].length > 0) {
-                let lista = infoCochesGlobal[targetKey].map(dato => `<li class="mb-1"><i class="fas fa-check text-teal-500 mr-2"></i>${dato}</li>`).join('');
-                htmlContent = `<ul class="text-left text-gray-700">${lista}</ul>`;
+                // Genera la tabla clave-valor
+                let lista = infoCochesGlobal[targetKey].map(item => `
+                    <div class="flex justify-between border-b border-gray-200 border-opacity-60 py-2.5 last:border-0 items-center">
+                        <span class="text-[11px] font-bold text-teal-700 uppercase tracking-wide w-5/12 pr-2">${item.label}</span>
+                        <span class="text-sm font-medium text-gray-700 w-7/12 text-right break-words">${item.value || '-'}</span>
+                    </div>
+                `).join('');
+                htmlContent = `<div class="flex flex-col">${lista}</div>`;
             } else {
-                htmlContent = `<p class="text-center text-gray-500 mt-2">No hay datos registrados en Drive para este vehículo.</p>`;
+                htmlContent = `<p class="text-center text-gray-500 my-4">No hay datos registrados para este vehículo.</p>`;
             }
             
             document.getElementById('infoCocheContent').innerHTML = htmlContent;
