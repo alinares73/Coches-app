@@ -40,7 +40,6 @@
                     <i class="fas fa-car-side text-2xl opacity-90"></i>
                     <h1 class="text-xl font-bold tracking-wider">COCHES</h1>
                 </div>
-                <!-- Mini Indicador de actualización (Reemplaza la pantalla gigante de carga) -->
                 <button onclick="cargarDatos(true)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white hover:bg-opacity-20 transition relative">
                     <i id="sync-icon" class="fas fa-sync-alt text-white opacity-90"></i>
                     <div id="sync-loader" class="loader absolute hidden"></div>
@@ -49,7 +48,6 @@
         </header>
 
         <main class="flex-1 flex w-full relative bg-white overflow-hidden">
-            
             <div class="w-[50px] flex-shrink-0 flex flex-col bg-gray-50 border-r border-gray-200 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                 <div class="h-[52px] w-full flex items-center justify-center border-b border-gray-200 bg-gray-100">
                     <button onclick="scrollSieteDias(-1)" class="w-8 h-8 flex items-center justify-center text-teal-700 hover:bg-gray-200 rounded-full transition">
@@ -68,15 +66,14 @@
                     <i class="fas fa-chevron-right text-sm"></i>
                 </button>
             </div>
-            
-            <!-- BOTÓN FLOTANTE (VIAJE) -->
-            <button onclick="abrirViajeModal()" class="fab-btn absolute bottom-6 right-6 bg-teal-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-xl hover:bg-teal-800 transition z-40 border-2 border-white">
-                <i class="fas fa-route"></i>
-            </button>
         </main>
+        
+        <button onclick="abrirViajeModal()" class="fab-btn fixed bottom-6 right-6 bg-teal-700 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-2xl hover:bg-teal-800 transition z-40 border-2 border-white">
+            <i class="fas fa-route"></i>
+        </button>
     </div>
 
-    <!-- MODAL RESERVA SIMPLE -->
+    <!-- MODAL RESERVA -->
     <div id="reservaModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-4 border-b pb-2 border-gray-100">
@@ -84,7 +81,6 @@
                 <button onclick="cerrarModal('reservaModal')" class="text-gray-400 text-2xl">&times;</button>
             </div>
             
-            <!-- AVISO TALLER (Oculto por defecto) -->
             <div id="avisoTallerBox" class="hidden mb-4 bg-red-50 border-l-4 border-red-500 p-3 rounded-lg text-sm text-red-700">
                 <strong class="flex items-center mb-1"><i class="fas fa-exclamation-triangle mr-2"></i> Aviso de Taller</strong>
                 <p id="avisoTallerText" class="italic"></p>
@@ -102,16 +98,32 @@
         </div>
     </div>
 
-    <!-- MODAL DATOS COCHE -->
+    <!-- MODAL DATOS COCHE (MODIFICADO CON BOTÓN EDITAR) -->
     <div id="infoCocheModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl max-h-[90vh] flex flex-col">
+            
+            <!-- Icono y Botón Engranaje -->
+            <div class="relative flex items-center justify-center mb-3">
+                <div class="w-12 h-12 bg-teal-50 rounded-full flex items-center justify-center text-teal-700 text-xl border border-teal-100">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <button id="btnConfigCoche" onclick="toggleEditCoche()" class="absolute right-0 top-1 text-gray-400 hover:text-teal-600 text-xl transition p-2">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+            
             <h3 class="text-lg font-bold text-gray-800 text-center mb-4" id="infoCocheTitle">Datos Vehículo</h3>
+            
+            <!-- El contenido interior se recargará dinámicamente con JS (Vista vs Edición) -->
             <div id="infoCocheContent" class="text-gray-600 text-sm bg-gray-50 p-3 rounded-xl border border-gray-100 flex-1 overflow-y-auto mb-4"></div>
             
-            <button onclick="abrirTallerModal()" class="w-full bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 font-bold py-3 rounded-xl transition flex items-center justify-center mb-2">
-                <i class="fas fa-wrench mr-2"></i> Observación Taller
-            </button>
-            <button onclick="cerrarModal('infoCocheModal')" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl transition">Cerrar</button>
+            <!-- Botones inferiores se ocultan en modo edición -->
+            <div id="infoCocheActions">
+                <button onclick="abrirTallerModal()" class="w-full bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 font-bold py-3 rounded-xl transition flex items-center justify-center mb-2">
+                    <i class="fas fa-wrench mr-2"></i> Observación Taller
+                </button>
+                <button onclick="cerrarModal('infoCocheModal')" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl transition">Cerrar</button>
+            </div>
         </div>
     </div>
 
@@ -152,7 +164,10 @@
     <div id="tallerModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl border-[3px] border-red-500">
             <div class="flex justify-between items-center mb-3 border-b pb-2 border-red-100">
-                <h2 id="tallerMainTitle" class="text-xl font-bold text-red-700"><i class="fas fa-wrench mr-2"></i>Taller: <span id="tallerCocheName"></span></h2>
+                <h2 class="text-xl font-bold text-red-700">
+                    <span id="tallerMainTitleText"><i class="fas fa-wrench mr-2"></i>Taller:</span> 
+                    <span id="tallerCocheName" class="ml-1 text-lg"></span>
+                </h2>
                 <button onclick="cerrarModal('tallerModal')" class="text-gray-400 text-2xl">&times;</button>
             </div>
             <form onsubmit="enviarTaller(event)">
@@ -172,7 +187,6 @@
                         <select id="tallerTurnoFin" class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm"><option>Mañana</option><option>Tarde</option></select>
                     </div>
                 </div>
-                
                 <div class="flex flex-col gap-2">
                     <button type="submit" id="btnTaller" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl flex items-center justify-center">Aplicar Taller</button>
                     <button type="button" id="btnBorrarTaller" onclick="borrarTaller()" class="hidden w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 font-bold py-3 rounded-xl transition flex items-center justify-center">
@@ -199,6 +213,7 @@
         let reservasActivas = new Map();
         let infoCochesGlobal = {}; 
         let currentCocheIdForTaller = "";
+        let isEditModeInfo = false; // Control del engranaje
         
         let arrayFechas = [];
         let baseDate = new Date();
@@ -220,14 +235,9 @@
             document.getElementById('tallerFechaIn').value = hoyIso;
             document.getElementById('tallerFechaFin').value = hoyIso;
             
-            // 1. CARGA INSTANTÁNEA (CACHÉ)
             const cache = localStorage.getItem('cochesDataCache');
-            if (cache) {
-                procesarDatos(JSON.parse(cache));
-                cargarDatos(false); // Refresco silencioso de fondo
-            } else {
-                cargarDatos(true); // Carga visible si es la primera vez
-            }
+            if (cache) { procesarDatos(JSON.parse(cache)); cargarDatos(false); } 
+            else { cargarDatos(true); }
         });
 
         function cargarDatos(mostrarLoader = false) {
@@ -235,20 +245,15 @@
                 document.getElementById('sync-icon').classList.add('hidden');
                 document.getElementById('sync-loader').classList.remove('hidden');
             }
-            
-            fetch(SCRIPT_URL)
-                .then(r => r.json())
-                .then(data => {
-                    localStorage.setItem('cochesDataCache', JSON.stringify(data)); // Guardar caché
-                    procesarDatos(data);
-                })
-                .catch(e => console.log("Modo offline"))
-                .finally(() => {
-                    if (mostrarLoader) {
-                        document.getElementById('sync-icon').classList.remove('hidden');
-                        document.getElementById('sync-loader').classList.add('hidden');
-                    }
-                });
+            fetch(SCRIPT_URL).then(r => r.json()).then(data => {
+                localStorage.setItem('cochesDataCache', JSON.stringify(data));
+                procesarDatos(data);
+            }).catch(e => console.log("Modo offline")).finally(() => {
+                if (mostrarLoader) {
+                    document.getElementById('sync-icon').classList.remove('hidden');
+                    document.getElementById('sync-loader').classList.add('hidden');
+                }
+            });
         }
 
         function procesarDatos(data) {
@@ -266,7 +271,6 @@
         function renderApp() {
             const todayStr = new Date().toDateString();
             
-            // Columna Fija
             let fixedHtml = "";
             coches.forEach(coche => {
                 fixedHtml += `
@@ -279,12 +283,10 @@
             });
             document.getElementById('fixed-cars-col').innerHTML = fixedHtml;
 
-            // Scroll Calendario
             let gridHtml = "";
             arrayFechas.forEach((fechaObj, index) => {
                 const isToday = fechaObj.toDateString() === todayStr;
                 const fechaStr = new Date(fechaObj.getTime() - (fechaObj.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-                
                 const bgClass = isToday ? 'bg-teal-50 border-x border-teal-200 shadow-sm z-10' : 'bg-transparent';
                 const textClass = isToday ? 'text-teal-800' : 'text-gray-500';
                 
@@ -296,11 +298,8 @@
                     </div>`;
                 
                 coches.forEach(coche => {
-                    const idM = `${coche.id}_${fechaStr}_Mañana`;
-                    const idT = `${coche.id}_${fechaStr}_Tarde`;
-                    const resM = reservasActivas.get(idM);
-                    const resT = reservasActivas.get(idT);
-                    
+                    const resM = reservasActivas.get(`${coche.id}_${fechaStr}_Mañana`);
+                    const resT = reservasActivas.get(`${coche.id}_${fechaStr}_Tarde`);
                     const clickM = `abrirReservaNormal('${coche.id}', '${coche.alias.replace('<br>',' ')}', '${fechaStr}', 'Mañana', '${fechaObj.toLocaleDateString()}')`;
                     const clickT = `abrirReservaNormal('${coche.id}', '${coche.alias.replace('<br>',' ')}', '${fechaStr}', 'Tarde', '${fechaObj.toLocaleDateString()}')`;
 
@@ -312,7 +311,6 @@
                     if (resT && resT.nombre !== "") { styleT = "bg-[#c2410c] text-white border border-[#c2410c] border-t-white/30 rounded-b-full"; }
                     if (resM && resM.nombre !== "" && resT && resT.nombre !== "") { midLine = `<div class="h-[1px] bg-transparent"></div>`; }
                     
-                    // MARCADO TALLER (Borde rojo doble, fondo blanco)
                     if (resM && resM.taller) { styleM = "bg-white text-red-700 border-[2.5px] border-red-600 border-b-0 rounded-t-full shadow-inner"; }
                     if (resT && resT.taller) { styleT = "bg-white text-red-700 border-[2.5px] border-red-600 border-t-0 rounded-b-full shadow-inner"; }
 
@@ -329,25 +327,19 @@
             });
             document.getElementById('calendar-grid').innerHTML = gridHtml;
             
-            // Centrar hoy (solo se ejecuta si no se ha scrolleado)
             if(!window.haCentradoHoy) {
                 setTimeout(() => {
                     const todayIndex = arrayFechas.findIndex(d => d.toDateString() === todayStr);
-                    if(todayIndex !== -1) {
-                        document.getElementById('scroll-container').scrollTo({ left: (todayIndex * 42) - 45, behavior: 'smooth' });
-                    }
+                    if(todayIndex !== -1) document.getElementById('scroll-container').scrollTo({ left: (todayIndex * 42) - 45, behavior: 'smooth' });
                     window.haCentradoHoy = true;
                 }, 100);
             }
         }
 
-        function scrollSieteDias(direccion) {
-            document.getElementById('scroll-container').scrollBy({ left: direccion * 42 * 7, behavior: 'smooth' });
-        }
-
+        function scrollSieteDias(direccion) { document.getElementById('scroll-container').scrollBy({ left: direccion * 42 * 7, behavior: 'smooth' }); }
         function cerrarModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-        // --- RESERVA ---
+        // --- RESERVAS ---
         let reservaPendiente = null;
         function abrirReservaNormal(cocheId, cocheAlias, fechaISO, turno, fechaTexto) {
             reservaPendiente = { coche: cocheId, fecha: fechaISO, turno, id: `${cocheId}_${fechaISO}_${turno}` };
@@ -359,13 +351,10 @@
             const input = document.getElementById('inputNombre');
             const avisoBox = document.getElementById('avisoTallerBox');
             
-            // AVISO TALLER
             if (resObj && resObj.taller) {
                 avisoBox.classList.remove('hidden');
                 document.getElementById('avisoTallerText').innerText = resObj.observacion || "En mantenimiento.";
-            } else {
-                avisoBox.classList.add('hidden');
-            }
+            } else { avisoBox.classList.add('hidden'); }
             
             if (resObj && resObj.nombre !== "") {
                 document.getElementById('modalTitle').innerText = "Editar Reserva";
@@ -387,33 +376,95 @@
             const btn = document.getElementById('btnConfirmarReserva');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
 
-            fetch(SCRIPT_URL, { 
-                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, 
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify([{ fecha: reservaPendiente.fecha, nombre: nombre, coche: reservaPendiente.coche, turno: reservaPendiente.turno }]) 
             }).then(() => { cargarDatos(true); cerrarModal('reservaModal'); })
               .catch(e => alert("Error."))
               .finally(() => { btn.innerHTML = 'Guardar'; btn.disabled = false; });
         }
 
-        // --- INFO COCHE ---
+        // --- INFO COCHE Y EDICIÓN ---
+        function formatPhone(text) {
+            // Regex detecta móviles/fijos españoles de 9 cifras empezando por 6,7,8,9
+            const phoneRegex = /\b(?:(?:\+|00)34[\s.-]?)?[6789](?:[\s.-]?\d){8}\b/g;
+            return text.replace(phoneRegex, match => `<a href="tel:${match.replace(/\s+/g, '')}" class="text-blue-600 underline font-bold" onclick="event.stopPropagation()">${match}</a>`);
+        }
+
         function mostrarDatosCoche(cocheId, cocheAlias) {
             currentCocheIdForTaller = cocheId; 
             document.getElementById('infoCocheTitle').innerHTML = cocheAlias.replace('<br>', ' ');
-            
-            let targetKey = Object.keys(infoCochesGlobal).find(k => k.toLowerCase().includes(cocheId.toLowerCase()));
+            isEditModeInfo = false; // Siempre empieza en modo lectura
+            renderInfoCocheContent();
+            document.getElementById('infoCocheModal').classList.remove('hidden');
+        }
+
+        function toggleEditCoche() {
+            isEditModeInfo = !isEditModeInfo;
+            renderInfoCocheContent();
+        }
+
+        function renderInfoCocheContent() {
+            let targetKey = Object.keys(infoCochesGlobal).find(k => k.toLowerCase().includes(currentCocheIdForTaller.toLowerCase()));
             let htmlContent = `<p class="text-center text-gray-500 my-4">Sin datos en Drive.</p>`;
             
             if (targetKey && infoCochesGlobal[targetKey]) {
-                let lista = infoCochesGlobal[targetKey].map(item => `
-                    <div class="flex justify-between border-b border-gray-200 border-opacity-60 py-2 last:border-0 items-center">
-                        <span class="text-[11px] font-bold text-teal-700 uppercase tracking-wide w-5/12 pr-1">${item.label}</span>
-                        <span class="text-[12px] font-medium text-gray-700 w-7/12 text-right break-words">${item.value || '-'}</span>
-                    </div>
-                `).join('');
-                htmlContent = `<div class="flex flex-col">${lista}</div>`;
+                if (isEditModeInfo) {
+                    // MODO EDICIÓN
+                    let inputs = infoCochesGlobal[targetKey].map((item, index) => `
+                        <div class="flex flex-col border-b border-gray-200 border-opacity-60 py-2 last:border-0">
+                            <label class="text-[11px] font-bold text-teal-700 uppercase tracking-wide mb-1">${item.label}</label>
+                            <input type="text" id="editCocheVal_${index}" value="${item.value || ''}" data-label="${item.label}" class="w-full border border-gray-300 p-2 rounded text-sm focus:border-teal-500 focus:outline-none">
+                        </div>
+                    `).join('');
+                    htmlContent = `
+                        <form onsubmit="guardarDatosCoche(event)">
+                            <div class="flex flex-col mb-3">${inputs}</div>
+                            <button type="submit" id="btnGuardarCoche" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition shadow-md">Guardar Cambios</button>
+                        </form>`;
+                    document.getElementById('infoCocheActions').classList.add('hidden');
+                } else {
+                    // MODO LECTURA (con teléfonos clicables)
+                    let lista = infoCochesGlobal[targetKey].map(item => `
+                        <div class="flex justify-between border-b border-gray-200 border-opacity-60 py-2 last:border-0 items-center">
+                            <span class="text-[11px] font-bold text-teal-700 uppercase tracking-wide w-5/12 pr-1">${item.label}</span>
+                            <span class="text-[12px] font-medium text-gray-700 w-7/12 text-right break-words">${formatPhone(item.value || '-')}</span>
+                        </div>
+                    `).join('');
+                    htmlContent = `<div class="flex flex-col">${lista}</div>`;
+                    document.getElementById('infoCocheActions').classList.remove('hidden');
+                }
             }
             document.getElementById('infoCocheContent').innerHTML = htmlContent;
-            document.getElementById('infoCocheModal').classList.remove('hidden');
+            
+            // Cambiar color del engranaje
+            const gearBtn = document.getElementById('btnConfigCoche');
+            if(isEditModeInfo) { gearBtn.classList.add('text-teal-600'); gearBtn.classList.remove('text-gray-400'); }
+            else { gearBtn.classList.add('text-gray-400'); gearBtn.classList.remove('text-teal-600'); }
+        }
+
+        function guardarDatosCoche(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnGuardarCoche');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
+            
+            let targetKey = Object.keys(infoCochesGlobal).find(k => k.toLowerCase().includes(currentCocheIdForTaller.toLowerCase()));
+            let datosNuevos = [];
+            
+            // Recoger todos los inputs generados dinámicamente
+            let inputs = document.querySelectorAll('input[id^="editCocheVal_"]');
+            inputs.forEach(inp => { datosNuevos.push({ label: inp.getAttribute('data-label'), value: inp.value }); });
+            
+            const payload = { action: "update_coche", coche: currentCocheIdForTaller, datos: datosNuevos };
+            
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            .then(() => { 
+                infoCochesGlobal[targetKey] = datosNuevos; // Guarda en local inmediatamente
+                isEditModeInfo = false;
+                renderInfoCocheContent(); // Vuelve a la vista normal
+                cargarDatos(true); // Sincroniza background
+            })
+            .catch(e => alert("Error al guardar."))
+            .finally(() => { if(btn) { btn.innerHTML = 'Guardar Cambios'; btn.disabled = false; } });
         }
 
         // --- TALLER INTELIGENTE ---
@@ -421,10 +472,8 @@
             cerrarModal('infoCocheModal');
             document.getElementById('tallerCocheName').innerText = currentCocheIdForTaller;
             
-            // Buscar si ya hay taller activo desde HOY
             const hoyIso = new Date().toISOString().split('T')[0];
             let slotsTaller = [];
-            
             arrayFechas.forEach(d => {
                 let fStr = d.toISOString().split('T')[0];
                 if (fStr >= hoyIso) {
@@ -436,27 +485,17 @@
             });
             
             if (slotsTaller.length > 0) {
-                // Modo Edición Taller
-                document.getElementById('tallerMainTitle').innerHTML = `<i class="fas fa-wrench mr-2"></i>Modificar Taller`;
-                document.getElementById('tallerFechaIn').value = slotsTaller[0].fecha;
-                document.getElementById('tallerTurnoIn').value = slotsTaller[0].turno;
-                document.getElementById('tallerFechaFin').value = slotsTaller[slotsTaller.length-1].fecha;
-                document.getElementById('tallerTurnoFin').value = slotsTaller[slotsTaller.length-1].turno;
+                document.getElementById('tallerMainTitleText').innerHTML = `<i class="fas fa-wrench mr-2"></i>Modificar Taller:`;
+                document.getElementById('tallerFechaIn').value = slotsTaller[0].fecha; document.getElementById('tallerTurnoIn').value = slotsTaller[0].turno;
+                document.getElementById('tallerFechaFin').value = slotsTaller[slotsTaller.length-1].fecha; document.getElementById('tallerTurnoFin').value = slotsTaller[slotsTaller.length-1].turno;
                 document.getElementById('tallerObs').value = slotsTaller[0].obs || "";
-                
-                document.getElementById('btnTaller').innerText = "Actualizar Taller";
-                document.getElementById('btnBorrarTaller').classList.remove('hidden');
+                document.getElementById('btnTaller').innerText = "Actualizar Taller"; document.getElementById('btnBorrarTaller').classList.remove('hidden');
             } else {
-                // Modo Nuevo Taller
-                document.getElementById('tallerMainTitle').innerHTML = `<i class="fas fa-wrench mr-2"></i>Nuevo Taller`;
-                document.getElementById('tallerFechaIn').value = hoyIso;
-                document.getElementById('tallerFechaFin').value = hoyIso;
+                document.getElementById('tallerMainTitleText').innerHTML = `<i class="fas fa-wrench mr-2"></i>Nuevo Taller:`;
+                document.getElementById('tallerFechaIn').value = hoyIso; document.getElementById('tallerFechaFin').value = hoyIso;
                 document.getElementById('tallerObs').value = "";
-                
-                document.getElementById('btnTaller').innerText = "Aplicar Taller";
-                document.getElementById('btnBorrarTaller').classList.add('hidden');
+                document.getElementById('btnTaller').innerText = "Aplicar Taller"; document.getElementById('btnBorrarTaller').classList.add('hidden');
             }
-            
             document.getElementById('tallerModal').classList.remove('hidden');
         }
 
@@ -510,7 +549,7 @@
             for(let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
                 let fStr = d.toISOString().split('T')[0];
                 if (d.getTime() === startD.getTime() && d.getTime() === endD.getTime()) {
-                    if (tIn === "Tarde" && tFin === "Mañana") { /* Rango inválido */ } 
+                    if (tIn === "Tarde" && tFin === "Mañana") { /* Inválido */ } 
                     else if (tIn === "Mañana" && tFin === "Tarde") { payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre}); }
                     else { payloadArr.push({fecha:fStr, turno:tIn, coche, nombre}); }
                 } else if (d.getTime() === startD.getTime()) {
@@ -529,6 +568,8 @@
             .catch(e => alert("Error."))
             .finally(() => { btn.innerHTML = 'Guardar Viaje'; btn.disabled = false; });
         }
+
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
     </script>
 </body>
 </html>
