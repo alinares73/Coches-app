@@ -17,6 +17,9 @@
         .bg-teal-header { background-color: #0f766e; }
         
         .slot-btn:active, .car-btn:active, .fab-btn:active { transform: scale(0.92); }
+        
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #0f766e; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         #scroll-container {
             display: flex; overflow-x: auto; scroll-behavior: smooth;
@@ -32,12 +35,11 @@
         
         <header class="bg-teal-header text-white pt-6 pb-4 px-4 shadow-md z-30 relative shrink-0">
             <div class="flex items-center justify-between">
-                <div class="w-14"></div> <!-- Espaciador para centrar el título -->
+                <div class="w-14"></div> <!-- Espaciador -->
                 <div class="flex items-center gap-2">
                     <i class="fas fa-car-side text-2xl opacity-90"></i>
                     <h1 class="text-xl font-bold tracking-wider">COCHES</h1>
                 </div>
-                <!-- NUEVO BOTÓN HOY -->
                 <button onclick="irAHoy()" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-bold py-1.5 px-3 rounded-full text-xs tracking-wider transition shadow-sm border border-white border-opacity-30">
                     HOY
                 </button>
@@ -65,8 +67,13 @@
             </div>
         </main>
         
+        <!-- AVISO DE CARGA FLOTANTE (Se sitúa justo encima del botón de viaje) -->
+        <div id="floating-loader" class="fixed bottom-[88px] right-6 bg-gray-800 text-white px-4 py-2.5 rounded-full shadow-lg flex items-center justify-center text-xs font-semibold transition-opacity duration-300 z-40 opacity-0 hidden pointer-events-none border border-gray-700">
+            <i class="fas fa-spinner fa-spin mr-2 text-teal-400 text-sm"></i> Cargando datos de Excel...
+        </div>
+
         <!-- BOTÓN FLOTANTE DE VIAJE -->
-        <button onclick="abrirViajeModal()" class="fab-btn fixed bottom-6 right-6 bg-teal-700 text-white px-5 py-3.5 rounded-full shadow-2xl flex items-center justify-center hover:bg-teal-800 transition z-40 border-2 border-white">
+        <button onclick="abrirViajeModal()" class="fab-btn fixed bottom-6 right-6 bg-teal-700 text-white px-5 py-3.5 rounded-full shadow-2xl flex items-center justify-center hover:bg-teal-800 transition z-50 border-2 border-white">
             <i class="fas fa-route text-xl mr-2"></i>
             <span class="text-sm font-bold uppercase tracking-wide">Añadir Viaje</span>
         </button>
@@ -232,22 +239,39 @@
             document.getElementById('tallerFechaFin').value = hoyIso;
             
             const cache = localStorage.getItem('cochesDataCache');
-            if (cache) { procesarDatos(JSON.parse(cache)); cargarDatos(); } 
-            else { cargarDatos(); }
-        });
-
-        // NUEVO: Cada vez que vuelves a la aplicación, se actualiza silenciosamente en segundo plano
-        document.addEventListener('visibilitychange', () => {
-            if(document.visibilityState === 'visible') {
-                cargarDatos();
+            if (cache) { 
+                procesarDatos(JSON.parse(cache)); 
+                cargarDatos(true); // Arranca y muestra el botón flotante
+            } else { 
+                cargarDatos(true); 
             }
         });
 
-        function cargarDatos() {
+        document.addEventListener('visibilitychange', () => {
+            if(document.visibilityState === 'visible') {
+                cargarDatos(false); // Sincroniza en background sin loader al volver
+            }
+        });
+
+        // NUEVA FUNCIÓN DE CARGA CON BOTÓN FLOTANTE
+        function cargarDatos(mostrarLoader = false) {
+            const floatLoader = document.getElementById('floating-loader');
+            
+            if (mostrarLoader) {
+                floatLoader.classList.remove('hidden');
+                // Timeout para la opacidad (transición CSS)
+                setTimeout(() => floatLoader.classList.remove('opacity-0'), 10);
+            }
+            
             fetch(SCRIPT_URL).then(r => r.json()).then(data => {
                 localStorage.setItem('cochesDataCache', JSON.stringify(data));
                 procesarDatos(data);
-            }).catch(e => console.log("Modo offline"));
+            }).catch(e => console.log("Modo offline")).finally(() => {
+                if (mostrarLoader) {
+                    floatLoader.classList.add('opacity-0');
+                    setTimeout(() => floatLoader.classList.add('hidden'), 300);
+                }
+            });
         }
 
         function procesarDatos(data) {
@@ -262,15 +286,12 @@
             renderApp();
         }
 
-        // FUNCION IR A HOY
         function irAHoy() {
             const todayStr = new Date().toDateString();
             const todayIndex = arrayFechas.findIndex(d => d.toDateString() === todayStr);
             if(todayIndex !== -1) {
                 const diaEl = document.getElementById(`dia-${todayIndex}`);
-                if (diaEl) {
-                    document.getElementById('scroll-container').scrollTo({ left: diaEl.offsetLeft, behavior: 'smooth' });
-                }
+                if (diaEl) document.getElementById('scroll-container').scrollTo({ left: diaEl.offsetLeft, behavior: 'smooth' });
             }
         }
 
@@ -320,28 +341,33 @@
                     let styleM = "rounded-t-full ";
                     let styleT = "rounded-b-full ";
 
+                    // NUEVO COLOR GRANATE Y BORDE ROJO CASI NEGRO PARA RESERVAS
                     if (isResM) {
-                        styleM += "bg-[#c2410c] text-white shadow-inner ";
-                        if (isTallerM) styleM += "border-[2.5px] border-amber-800 border-b-0 ";
-                        else styleM += "border border-[#c2410c] border-b-white/30 ";
+                        styleM += "bg-[#901a1e] text-white shadow-inner ";
+                        if (isTallerM) styleM += "border-[2.5px] border-[#78350f] border-b-0 "; // Taller = Marrón
+                        else styleM += "border-2 border-[#2b0000] border-b-0 "; // Normal = Casi negro
                     } else {
                         styleM += "bg-white ";
-                        if (isTallerM) styleM += "text-amber-800 border-[2.5px] border-amber-800 border-b-0 shadow-inner ";
-                        else styleM += "text-teal-700 border border-teal-500 border-b-0 ";
+                        if (isTallerM) styleM += "text-[#78350f] border-[2.5px] border-[#78350f] border-b-0 shadow-inner ";
+                        else styleM += "text-teal-700 border-[1.5px] border-teal-500 border-b-0 ";
                     }
 
                     if (isResT) {
-                        styleT += "bg-[#c2410c] text-white shadow-inner ";
-                        if (isTallerT) styleT += "border-[2.5px] border-amber-800 border-t-0 ";
-                        else styleT += "border border-[#c2410c] border-t-white/30 ";
+                        styleT += "bg-[#901a1e] text-white shadow-inner ";
+                        if (isTallerT) styleT += "border-[2.5px] border-[#78350f] border-t-0 ";
+                        else styleT += "border-2 border-[#2b0000] border-t-0 ";
                     } else {
                         styleT += "bg-white ";
-                        if (isTallerT) styleT += "text-amber-800 border-[2.5px] border-amber-800 border-t-0 shadow-inner ";
-                        else styleT += "text-teal-700 border border-teal-500 border-t-0 ";
+                        if (isTallerT) styleT += "text-[#78350f] border-[2.5px] border-[#78350f] border-t-0 shadow-inner ";
+                        else styleT += "text-teal-700 border-[1.5px] border-teal-500 border-t-0 ";
                     }
 
                     let midLine = `<div class="h-[1px] bg-teal-100 mx-1"></div>`;
-                    if (isResM && isResT) midLine = `<div class="h-[1px] bg-transparent"></div>`;
+                    if (isResM && isResT) {
+                        // Si ambos son taller, línea marrón. Si solo es reserva, línea casi negra.
+                        if (isTallerM && isTallerT) midLine = `<div class="h-[1px] bg-[#78350f] mx-1"></div>`;
+                        else midLine = `<div class="h-[1px] bg-[#2b0000]"></div>`;
+                    }
 
                     colHtml += `
                         <div class="h-[4.7rem] w-full max-w-[34px] flex flex-col py-[5px]">
@@ -409,7 +435,7 @@
             fetch(SCRIPT_URL, { 
                 method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify([{ fecha: reservaPendiente.fecha, nombre: nombre, coche: reservaPendiente.coche, turno: reservaPendiente.turno }]) 
-            }).then(() => { cargarDatos(); });
+            }).then(() => { cargarDatos(false); });
         }
 
 
@@ -481,7 +507,7 @@
 
             const payload = { action: "update_coche", coche: currentCocheIdForTaller, datos: datosNuevos };
             fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            .then(() => { cargarDatos(); });
+            .then(() => { cargarDatos(false); });
         }
 
 
@@ -560,7 +586,7 @@
                 inicio: { fecha: fIn, turno: tIn }, fin: { fecha: fFin, turno: tFin }
             };
             fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            .then(() => { cargarDatos(); });
+            .then(() => { cargarDatos(false); });
         }
 
         function borrarTaller() {
@@ -580,7 +606,7 @@
 
             const payload = { action: "borrar_taller", coche: currentCocheIdForTaller, fechaHoy: hoyIso };
             fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            .then(() => { cargarDatos(); });
+            .then(() => { cargarDatos(false); });
         }
 
         function abrirViajeModal() { document.getElementById('viajeModal').classList.remove('hidden'); }
@@ -622,7 +648,7 @@
             document.getElementById('viajeNombre').value = '';
 
             fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payloadArr) })
-            .then(() => { cargarDatos(); });
+            .then(() => { cargarDatos(false); });
         }
 
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
