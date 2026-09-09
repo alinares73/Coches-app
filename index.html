@@ -35,7 +35,7 @@
         
         <header class="bg-teal-header text-white pt-6 pb-4 px-4 shadow-md z-30 relative shrink-0">
             <div class="flex items-center justify-between">
-                <div class="w-14"></div> <!-- Espaciador -->
+                <div class="w-14"></div>
                 <div class="flex items-center gap-2">
                     <i class="fas fa-car-side text-2xl opacity-90"></i>
                     <h1 class="text-xl font-bold tracking-wider">COCHES</h1>
@@ -67,12 +67,10 @@
             </div>
         </main>
         
-        <!-- AVISO DE CARGA FLOTANTE (Se sitúa justo encima del botón de viaje) -->
         <div id="floating-loader" class="fixed bottom-[88px] right-6 bg-gray-800 text-white px-4 py-2.5 rounded-full shadow-lg flex items-center justify-center text-xs font-semibold transition-opacity duration-300 z-40 opacity-0 hidden pointer-events-none border border-gray-700">
             <i class="fas fa-spinner fa-spin mr-2 text-teal-400 text-sm"></i> Cargando datos de Excel...
         </div>
 
-        <!-- BOTÓN FLOTANTE DE VIAJE -->
         <button onclick="abrirViajeModal()" class="fab-btn fixed bottom-6 right-6 bg-teal-700 text-white px-5 py-3.5 rounded-full shadow-2xl flex items-center justify-center hover:bg-teal-800 transition z-50 border-2 border-white">
             <i class="fas fa-route text-xl mr-2"></i>
             <span class="text-sm font-bold uppercase tracking-wide">Añadir Viaje</span>
@@ -241,7 +239,7 @@
             const cache = localStorage.getItem('cochesDataCache');
             if (cache) { 
                 procesarDatos(JSON.parse(cache)); 
-                cargarDatos(true); // Arranca y muestra el botón flotante
+                cargarDatos(true); 
             } else { 
                 cargarDatos(true); 
             }
@@ -249,17 +247,15 @@
 
         document.addEventListener('visibilitychange', () => {
             if(document.visibilityState === 'visible') {
-                cargarDatos(false); // Sincroniza en background sin loader al volver
+                cargarDatos(false); 
             }
         });
 
-        // NUEVA FUNCIÓN DE CARGA CON BOTÓN FLOTANTE
         function cargarDatos(mostrarLoader = false) {
             const floatLoader = document.getElementById('floating-loader');
             
             if (mostrarLoader) {
                 floatLoader.classList.remove('hidden');
-                // Timeout para la opacidad (transición CSS)
                 setTimeout(() => floatLoader.classList.remove('opacity-0'), 10);
             }
             
@@ -341,32 +337,32 @@
                     let styleM = "rounded-t-full ";
                     let styleT = "rounded-b-full ";
 
-                    // NUEVO COLOR GRANATE Y BORDE ROJO CASI NEGRO PARA RESERVAS
+                    // COLOR GRANATE Y BORDE AMARILLO-ANARANJADO PARA TALLER
                     if (isResM) {
                         styleM += "bg-[#901a1e] text-white shadow-inner ";
-                        if (isTallerM) styleM += "border-[2.5px] border-[#78350f] border-b-0 "; // Taller = Marrón
+                        if (isTallerM) styleM += "border-[2.5px] border-[#f59e0b] border-b-0 "; // Taller = Amarillo-Anaranjado
                         else styleM += "border-2 border-[#2b0000] border-b-0 "; // Normal = Casi negro
                     } else {
                         styleM += "bg-white ";
-                        if (isTallerM) styleM += "text-[#78350f] border-[2.5px] border-[#78350f] border-b-0 shadow-inner ";
+                        if (isTallerM) styleM += "text-[#b45309] border-[2.5px] border-[#f59e0b] border-b-0 shadow-inner "; // Taller libre
                         else styleM += "text-teal-700 border-[1.5px] border-teal-500 border-b-0 ";
                     }
 
                     if (isResT) {
                         styleT += "bg-[#901a1e] text-white shadow-inner ";
-                        if (isTallerT) styleT += "border-[2.5px] border-[#78350f] border-t-0 ";
+                        if (isTallerT) styleT += "border-[2.5px] border-[#f59e0b] border-t-0 ";
                         else styleT += "border-2 border-[#2b0000] border-t-0 ";
                     } else {
                         styleT += "bg-white ";
-                        if (isTallerT) styleT += "text-[#78350f] border-[2.5px] border-[#78350f] border-t-0 shadow-inner ";
+                        if (isTallerT) styleT += "text-[#b45309] border-[2.5px] border-[#f59e0b] border-t-0 shadow-inner ";
                         else styleT += "text-teal-700 border-[1.5px] border-teal-500 border-t-0 ";
                     }
 
                     let midLine = `<div class="h-[1px] bg-teal-100 mx-1"></div>`;
-                    if (isResM && isResT) {
-                        // Si ambos son taller, línea marrón. Si solo es reserva, línea casi negra.
-                        if (isTallerM && isTallerT) midLine = `<div class="h-[1px] bg-[#78350f] mx-1"></div>`;
-                        else midLine = `<div class="h-[1px] bg-[#2b0000]"></div>`;
+                    if (isTallerM && isTallerT) {
+                        midLine = `<div class="h-[2px] bg-[#f59e0b] mx-1"></div>`; // Línea de separación taller visible
+                    } else if (isResM && isResT) {
+                        midLine = `<div class="h-[1px] bg-[#2b0000]"></div>`; // Línea casi negra reserva
                     }
 
                     colHtml += `
@@ -438,7 +434,6 @@
             }).then(() => { cargarDatos(false); });
         }
 
-
         function formatPhone(text) {
             const phoneRegex = /\b(?:(?:\+|00)34[\s.-]?)?[6789](?:[\s.-]?\d){8}\b/g;
             return text.replace(phoneRegex, match => `<a href="tel:${match.replace(/\s+/g, '')}" class="text-blue-600 underline font-bold" onclick="event.stopPropagation()">${match}</a>`);
@@ -509,7 +504,6 @@
             fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             .then(() => { cargarDatos(false); });
         }
-
 
         function abrirTallerModal() {
             cerrarModal('infoCocheModal');
