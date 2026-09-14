@@ -1,1367 +1,651 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Comedor Ciudadela</title>
-  
-  <!-- Enlace al Manifiesto PWA para el icono y modo app -->
-  <link rel="manifest" href="manifest.json">
-  
-  <!-- Etiquetas específicas para forzar el icono y modo app en iOS (iPad/iPhone) -->
-  <link rel="apple-touch-icon" href="icon-512.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  
-  <meta name="theme-color" content="#264334">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F6F4EE; }
-    .bg-forest { background-color: #264334; }
-    .bg-forest-light { background-color: #4A7C59; } 
-    .border-forest-light { border-color: #4A7C59; }
-    .text-forest { color: #264334; }
-    .badge-absent { background-color: #F8E2E0; color: #8C4340; }
-    .badge-present { background-color: #DDEEE6; color: #235944; }
-    .badge-special { background-color: #FEF3C7; color: #92400E; }
-    /* Deslizamiento táctil suave ocultando la barra de scroll y usando snap nativo */
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    #semana-container { 
-      -webkit-overflow-scrolling: touch; 
-      scroll-behavior: smooth; 
-      scroll-snap-type: x mandatory; 
-    }
-    .snap-start { scroll-snap-align: start; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Coches Ciudadela</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f766e"> 
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        body { -webkit-user-select: none; user-select: none; touch-action: manipulation; overflow: hidden; background-color: #f9fafb; }
+        .bg-teal-header { background-color: #0f766e; }
+        
+        .slot-btn:active, .car-btn:active, .fab-btn:active { transform: scale(0.92); }
+        
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #0f766e; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #scroll-container {
+            display: flex; overflow-x: auto; scroll-behavior: smooth;
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
+        #scroll-container::-webkit-scrollbar { display: none; }
+        .day-col { width: 42px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+    </style>
 </head>
-<body class="text-[#2B2B2B] p-4 sm:p-6 md:p-8 max-w-md md:max-w-xl lg:max-w-3xl mx-auto pb-24 select-none flex flex-col">
+<body class="min-h-screen font-sans flex flex-col items-center">
 
-  <!-- ================= PANTALLA PRINCIPAL MAIN ================= -->
-  <div id="pantalla-principal">
-    
-    <!-- Cabecera principal con Imagen Banner Edge-to-Edge Recta y botón HOY flotante -->
-    <header class="relative -mx-4 -mt-4 sm:-mx-6 sm:-mt-6 md:-mx-8 md:-mt-8 flex flex-col">
-      <img src="banner.jpg" alt="Comensales Ciudadela" class="w-full h-[140px] md:h-[180px] object-cover block">
-      
-      <div class="absolute top-12 right-4 sm:top-14 sm:right-6 md:top-16 md:right-8 z-10">
-        <button onclick="irAlDiaHoy()" class="bg-[#F8E2E0]/70 backdrop-blur-md hover:bg-[#F2D1CE]/90 text-[#8C4340] font-extrabold text-xs md:text-sm px-4 py-2.5 rounded-xl shadow-md active:scale-95 transition-all tracking-wider uppercase border border-white/40">
-          HOY
-        </button>
-      </div>
-    </header>
-
-    <!-- Selector Carrusel Deslizable de Días -->
-    <div id="semana-box" class="bg-white rounded-2xl p-3 md:p-4 shadow-sm border border-gray-100 mb-4 select-none mt-6 relative z-10">
-      <div class="flex items-center justify-between mb-2">
-        <button onclick="cambiarSemanaFlecha(-1)" class="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 font-bold text-gray-700 text-lg active:scale-95 transition-all">&lsaquo;</button>
-        <span id="mes-anio-label" class="text-xs md:text-sm font-extrabold uppercase tracking-wider text-gray-600 transition-all">...</span>
-        <button onclick="cambiarSemanaFlecha(1)" class="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 font-bold text-gray-700 text-lg active:scale-95 transition-all">&rsaquo;</button>
-      </div>
-      
-      <!-- Carrusel horizontal calibrado al ancho total -->
-      <div class="flex overflow-x-auto no-scrollbar py-2 w-full relative" id="semana-container"></div>
-    </div>
-
-    <!-- Cabecera Fecha y Usuario -->
-    <div class="flex justify-between items-center my-4">
-      <div class="flex items-center space-x-3 md:space-x-4">
-        <span class="text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900 leading-none" id="dia-num">--</span>
-        <div class="flex flex-col justify-between py-0.5 leading-tight">
-          <span id="dia-txt" class="text-xs md:text-sm font-extrabold text-gray-400 uppercase tracking-wide">---</span>
-          <span id="mes-txt" class="text-base md:text-lg font-extrabold text-gray-900 uppercase tracking-tight">---</span>
-        </div>
-      </div>
-      
-      <!-- Selector de Iniciales Compacto a la Derecha -->
-      <div class="flex flex-col items-end">
-        <span class="text-[10px] md:text-xs tracking-widest font-bold text-gray-400 uppercase mb-0.5">Iniciales</span>
-        <div class="flex items-center space-x-1 bg-white/80 border border-gray-200/90 pl-3 pr-1.5 py-1 rounded-2xl shadow-sm">
-          <select id="user-select" onchange="verificarCambioUsuarioSelect(this)" class="font-extrabold text-base md:text-lg text-gray-900 bg-transparent cursor-pointer outline-none border-none text-right pr-1">
-          </select>
-          <button onclick="abrirModalSeleccionUsuarioInicial()" class="w-7 h-7 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-xs shadow-sm active:scale-95 transition-all" title="Configurar mis iniciales">
-            ⚙️
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tú este día / Persona seleccionada -->
-    <div class="mt-4">
-      <h2 class="text-[11px] md:text-xs font-bold tracking-wider text-gray-500 uppercase mb-2" id="label-tu-este-dia">Tú este día (Pulsa para cambiar)</h2>
-      <div class="grid grid-cols-3 gap-2 md:gap-2.5">
-        <div onclick="abrirModalEstado('desayuno')" class="bg-forest text-white rounded-[20px] p-3 md:p-4 shadow-sm cursor-pointer active:scale-95 transition-transform flex flex-col items-center justify-center text-center min-h-[95px]">
-          <span class="text-[11px] md:text-xs opacity-85 block mb-1 w-full text-left font-extrabold tracking-widest uppercase"><span class="text-lg md:text-xl mr-0.5">☼</span> DESAY</span>
-          <span class="text-2xl md:text-3xl font-extrabold my-auto" id="tu-desayuno">--</span>
-        </div>
-        <div onclick="abrirModalEstado('almuerzo')" class="bg-forest text-white rounded-[20px] p-3 md:p-4 shadow-sm cursor-pointer active:scale-95 transition-transform flex flex-col items-center justify-center text-center min-h-[95px]">
-          <span class="text-[11px] md:text-xs opacity-85 block mb-1 w-full text-left font-extrabold tracking-widest uppercase"><span class="text-lg md:text-xl mr-0.5">&#x1F374;</span> ALM</span>
-          <span class="text-2xl md:text-3xl font-extrabold my-auto" id="tu-almuerzo">--</span>
-        </div>
-        <div onclick="abrirModalEstado('cena')" class="bg-forest text-white rounded-[20px] p-3 md:p-4 shadow-sm cursor-pointer active:scale-95 transition-transform flex flex-col items-center justify-center text-center min-h-[95px]">
-          <span class="text-[11px] md:text-xs opacity-85 block mb-1 w-full text-left font-extrabold tracking-widest uppercase"><span class="text-lg md:text-xl mr-0.5">&#x263E;</span> CENA</span>
-          <span class="text-2xl md:text-3xl font-extrabold my-auto" id="tu-cena">--</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- BOTÓN DE GUARDAR CAMBIOS -->
-    <div id="contenedor-btn-guardar-sup" class="hidden mt-4">
-      <button onclick="guardarCambiosPendientes()" class="w-full bg-forest text-white font-bold py-3.5 px-5 rounded-xl flex items-center justify-between text-sm md:text-base shadow-md active:scale-95 transition-transform animate-pulse">
-        <div class="flex items-center space-x-2">
-          <span id="btn-guardar-icono">💾</span>
-          <span id="btn-guardar-txt-sup">Guardar cambios (0 pendientes)</span>
-        </div>
-        <span id="sync-status" class="text-xs text-white/70 font-medium tracking-tight">Pendiente</span>
-      </button>
-    </div>
-
-    <!-- Resumen de comensales -->
-    <div class="mt-5">
-      <h2 class="text-[11px] md:text-xs font-bold tracking-wider text-gray-500 uppercase mb-2">Resumen de comensales (Pulsa para ver detalle)</h2>
-      
-      <!-- CONTENEDOR NARANJA ELEGANTE -->
-      <div class="bg-[#E19D29] p-2 md:p-2.5 rounded-[24px] shadow-md">
-        <div class="grid grid-cols-3 gap-2">
-          <div onclick="seleccionarServicioDetalle('desayuno')" id="card-tot-desay" class="bg-[#264334] text-white rounded-[18px] p-3 shadow-sm border-none cursor-pointer transition-all flex flex-col items-center justify-center text-center min-h-[120px]">
-            <span class="text-[11px] md:text-xs text-white/90 block mb-1 w-full text-left font-extrabold tracking-widest uppercase"><span class="text-lg md:text-xl mr-0.5">☼</span> DESAY</span>
-            <span class="text-5xl md:text-6xl font-black text-white my-auto" id="tot-desayuno">0</span>
-            <div id="sub-tot-desayuno" class="text-sm md:text-base font-extrabold text-white/90 mt-1 min-h-[20px] leading-tight text-center w-full break-words"></div>
-          </div>
-          <div onclick="seleccionarServicioDetalle('almuerzo')" id="card-tot-alm" class="bg-white/95 rounded-[18px] p-3 shadow-sm border-none cursor-pointer transition-all text-gray-900 flex flex-col items-center justify-center text-center min-h-[120px]">
-            <span class="text-[11px] md:text-xs text-gray-500 block mb-1 w-full text-left font-extrabold tracking-widest uppercase"><span class="text-lg md:text-xl mr-0.5">&#x1F374;</span> ALM</span>
-            <span class="text-5xl md:text-6xl font-black text-gray-900 my-auto" id="tot-almuerzo">0</span>
-            <div id="sub-tot-almuerzo" class="text-sm md:text-base font-extrabold text-gray-500 mt-1 min-h-[20px] leading-tight text-center w-full break-words"></div>
-          </div>
-          <div onclick="seleccionarServicioDetalle('cena')" id="card-tot-cena" class="bg-white/95 rounded-[18px] p-3 shadow-sm border-none cursor-pointer transition-all text-gray-900 flex flex-col items-center justify-center text-center min-h-[120px]">
-            <span class="text-[11px] md:text-xs text-gray-500 block mb-1 w-full text-left font-extrabold tracking-widest uppercase"><span class="text-lg md:text-xl mr-0.5">&#x263E;</span> CENA</span>
-            <span class="text-5xl md:text-6xl font-black text-gray-900 my-auto" id="tot-cena">0</span>
-            <div id="sub-tot-cena" class="text-sm md:text-base font-extrabold text-gray-500 mt-1 min-h-[20px] leading-tight text-center w-full break-words"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Observaciones / Nota del día -->
-    <div id="contenedor-nota" class="hidden mt-5 bg-[#EDE5CD] text-[#7A6031] font-semibold text-sm md:text-base px-4 py-3.5 rounded-xl shadow-sm">
-      <div id="texto-nota" class="space-y-1"></div>
-    </div>
-
-    <!-- Desglose: Comen -->
-    <div class="mt-5 bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
-      <div class="flex justify-between items-center mb-3">
-        <span class="text-[11px] md:text-xs font-extrabold tracking-wider text-gray-500 uppercase" id="titulo-seccion-comen">COMEN · DESAYUNO</span>
-        <span id="count-comen" class="bg-forest text-white text-xs md:text-sm font-bold w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center">0</span>
-      </div>
-      <div class="flex flex-wrap gap-2" id="list-comen"></div>
-    </div>
-
-    <!-- Desglose: No vienen -->
-    <div class="mt-4 bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
-      <div class="flex justify-between items-center mb-3">
-        <span class="text-[11px] md:text-xs font-extrabold tracking-wider text-gray-500 uppercase" id="titulo-seccion-no">NO VIENEN · DESAYUNO</span>
-        <span id="count-no" class="bg-[#EAC8C6] text-[#8C4340] text-xs md:text-sm font-bold w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center">0</span>
-      </div>
-      <div class="flex flex-wrap gap-2" id="list-no"></div>
-    </div>
-
-    <!-- Desglose: Tarde / Temp / Bolsa -->
-    <div id="seccion-especial" class="mt-4 bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100 hidden">
-      <div class="flex justify-between items-center mb-3">
-        <span class="text-[11px] md:text-xs font-extrabold tracking-wider text-amber-800 uppercase" id="titulo-seccion-esp">TARDE / TEMP / BOLSA · DESAYUNO</span>
-        <span id="count-esp" class="bg-amber-100 text-amber-800 text-xs md:text-sm font-bold w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center">0</span>
-      </div>
-      <div class="flex flex-wrap gap-2" id="list-esp"></div>
-    </div>
-
-    <!-- BOTÓN AÑADIR AUSENCIAS -->
-    <div class="mt-6">
-      <button onclick="abrirPantallaAusencias()" class="w-full bg-forest text-white font-extrabold py-4 md:py-4.5 rounded-full flex items-center justify-center space-x-2 text-sm md:text-base shadow-lg active:scale-95 transition-transform">
-        <span>📅</span>
-        <span>Añadir ausencias</span>
-      </button>
-    </div>
-  </div>
-
-
-  <!-- ================= PANTALLA 2: GESTIÓN DE AUSENCIAS (RANGO) ================= -->
-  <div id="pantalla-ausencias" class="hidden">
-    <div class="flex items-center justify-between pt-2 pb-4 border-b border-gray-200 mb-4">
-      <div class="flex items-center space-x-3">
-        <button onclick="cerrarPantallaAusencias()" class="text-2xl font-bold text-gray-800">&times;</button>
-        <h1 class="text-xl md:text-2xl font-extrabold text-gray-900" id="titulo-pantalla-ausencias">Ausencias</h1>
-      </div>
-    </div>
-
-    <div class="mb-4">
-      <label class="text-[11px] md:text-xs font-extrabold tracking-wider text-gray-400 block uppercase mb-1">Quién</label>
-      <select id="ausencia-user-select" onchange="actualizarTituloAusencias()" class="w-full bg-white border border-gray-200 font-extrabold text-lg md:text-xl text-gray-900 p-3.5 rounded-2xl outline-none cursor-pointer shadow-sm">
-      </select>
-    </div>
-
-    <!-- Ficha INICIO -->
-    <div onclick="seleccionarFocoAusencia('inicio')" id="card-ausencia-inicio" class="bg-white border-2 rounded-2xl p-4 md:p-5 mb-3 shadow-sm cursor-pointer transition-all">
-      <div class="flex justify-between items-center mb-1">
-        <span class="text-[10px] md:text-xs tracking-widest font-extrabold text-gray-400 uppercase">INICIO</span>
-        <span id="badge-foco-inicio" class="text-[10px] md:text-xs font-bold text-[#264334] bg-[#DDEEE6] px-2.5 py-0.5 rounded-full">Seleccionando</span>
-      </div>
-      <div class="text-lg md:text-xl font-extrabold text-gray-900 mb-3" id="ausencia-inicio-txt">Elige un día</div>
-      <div class="grid grid-cols-3 gap-2.5" onclick="event.stopPropagation()">
-        <button onclick="setMealInicio('desayuno')" id="btn-ini-desayuno" class="py-3 rounded-xl font-bold text-xs md:text-sm bg-gray-100 text-gray-700 transition-all">Des</button>
-        <button onclick="setMealInicio('almuerzo')" id="btn-ini-almuerzo" class="py-3 rounded-xl font-bold text-xs md:text-sm bg-gray-100 text-gray-700 transition-all">Alm</button>
-        <button onclick="setMealInicio('cena')" id="btn-ini-cena" class="py-3 rounded-xl font-bold text-xs md:text-sm bg-gray-100 text-gray-700 transition-all">Cen</button>
-      </div>
-    </div>
-
-    <!-- Ficha FINAL -->
-    <div onclick="seleccionarFocoAusencia('final')" id="card-ausencia-final" class="bg-white border-2 rounded-2xl p-4 md:p-5 mb-4 shadow-sm cursor-pointer transition-all">
-      <div class="flex justify-between items-center mb-1">
-        <span class="text-[10px] md:text-xs tracking-widest font-extrabold text-gray-400 uppercase">FINAL</span>
-        <span id="badge-foco-final" class="hidden text-[10px] md:text-xs font-bold text-[#264334] bg-[#DDEEE6] px-2.5 py-0.5 rounded-full">Seleccionando</span>
-      </div>
-      <div class="text-lg md:text-xl font-extrabold text-gray-900 mb-3" id="ausencia-final-txt">Elige un día</div>
-      <div class="grid grid-cols-3 gap-2.5" onclick="event.stopPropagation()">
-        <button onclick="setMealFinal('desayuno')" id="btn-fin-desayuno" class="py-3 rounded-xl font-bold text-xs md:text-sm bg-gray-100 text-gray-700 transition-all">Des</button>
-        <button onclick="setMealFinal('almuerzo')" id="btn-fin-almuerzo" class="py-3 rounded-xl font-bold text-xs md:text-sm bg-gray-100 text-gray-700 transition-all">Alm</button>
-        <button onclick="setMealFinal('cena')" id="btn-fin-cena" class="py-3 rounded-xl font-bold text-xs md:text-sm bg-gray-100 text-gray-700 transition-all">Cen</button>
-      </div>
-    </div>
-
-    <!-- Calendario Mensual -->
-    <div class="bg-white border border-gray-200 rounded-2xl p-4 md:p-5 shadow-sm mb-6">
-      <div class="flex items-center justify-between mb-4">
-        <button onclick="cambiarMesCalendario(-1)" class="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 font-bold text-gray-700">&lsaquo;</button>
-        <span id="cal-mes-anio-label" class="text-sm md:text-base font-extrabold uppercase text-gray-800">...</span>
-        <button onclick="cambiarMesCalendario(1)" class="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 font-bold text-gray-700">&rsaquo;</button>
-      </div>
-      <div class="grid grid-cols-7 gap-1.5 text-center text-xs md:text-sm font-bold text-gray-400 mb-2">
-        <div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div>
-      </div>
-      <div class="grid grid-cols-7 gap-1.5 text-center text-sm md:text-base font-bold" id="cal-dias-grid"></div>
-    </div>
-
-    <!-- Botón Inferior Guardar Ausencias -->
-    <div class="mb-10">
-      <button onclick="ejecutarGuardarAusenciasRango()" id="btn-guardar-ausencias-rango" class="w-full bg-[#E8E6DF] text-gray-800 font-extrabold py-4 rounded-full flex flex-col items-center justify-center text-sm md:text-base shadow-md active:scale-95 transition-all">
-        <span id="btn-guardar-rango-icono">💾 Guardar ausencias</span>
-        <span id="btn-guardar-rango-sub" class="text-[11px] font-semibold text-gray-500 hidden mt-0.5">Guardando...</span>
-      </button>
-    </div>
-  </div>
-
-
-  <!-- Modal Estado Principal -->
-  <div id="modal-estado" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl text-center">
-      <h3 id="modal-titulo" class="font-extrabold text-gray-900 text-lg mb-4">Seleccionar estado</h3>
-      <div class="grid grid-cols-1 gap-2.5">
-        <button onclick="asignarEstadoLocal('')" class="bg-gray-100 hover:bg-gray-200 py-3 rounded-xl font-bold text-sm md:text-base">Sí</button>
-        <button onclick="asignarEstadoLocal('no')" class="bg-[#F8E2E0] text-[#8C4340] py-3 rounded-xl font-bold text-sm md:text-base">No</button>
-        <button onclick="asignarEstadoLocal('tarde')" class="bg-amber-100 text-amber-800 py-3 rounded-xl font-bold text-sm md:text-base">Tarde</button>
-        <button onclick="asignarEstadoLocal('temp')" class="bg-blue-100 text-blue-800 py-3 rounded-xl font-bold text-sm md:text-base">Temprano</button>
-        <button onclick="asignarEstadoLocal('bolsa')" class="bg-purple-100 text-purple-800 py-3 rounded-xl font-bold text-sm md:text-base">Bolsa</button>
+    <div class="w-full max-w-md bg-white h-screen shadow-2xl relative flex flex-col">
         
-        <div class="h-px bg-gray-200 my-1"></div>
-        
-        <button onclick="abrirModalObservaciones()" class="bg-[#EDE5CD] text-[#7A6031] py-3 rounded-xl font-bold text-sm md:text-base shadow-sm active:scale-95 transition-transform">
-          📝 Añadir observación
-        </button>
-      </div>
-      <button onclick="cerrarModal()" class="mt-5 text-gray-400 text-xs md:text-sm font-bold uppercase tracking-wider">Cancelar</button>
-    </div>
-  </div>
-
-  <!-- Modal para Editar Observaciones Dinámicas -->
-  <div id="modal-observaciones" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col max-h-[85vh]">
-      <h3 class="font-extrabold text-gray-900 text-lg mb-4 text-center">Observaciones del día</h3>
-      
-      <div id="lista-observaciones-inputs" class="flex-1 overflow-y-auto space-y-3 mb-5 no-scrollbar"></div>
-      
-      <div class="flex space-x-3 mt-auto">
-        <button onclick="cerrarModalObservaciones()" class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold text-sm md:text-base transition-colors hover:bg-gray-200">Cancelar</button>
-        <button onclick="guardarObservacionesLocales()" class="flex-1 bg-forest text-white py-3 rounded-xl font-bold text-sm md:text-base shadow-md active:scale-95 transition-transform">Guardar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal de Selección/Cambio de Iniciales Propias -->
-  <div id="modal-usuario-inicial" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl text-center">
-      <div class="text-4xl mb-3">🏠</div>
-      <h3 class="font-extrabold text-gray-900 text-xl mb-1">Tus Iniciales</h3>
-      <p class="text-xs text-gray-500 mb-6">Selecciona cuáles son tus iniciales en este dispositivo.</p>
-      
-      <div class="mb-6">
-        <select id="select-usuario-inicial" class="w-full bg-gray-50 border-2 border-forest-light font-extrabold text-xl text-gray-900 p-4 rounded-2xl outline-none cursor-pointer shadow-sm text-center">
-        </select>
-      </div>
-
-      <button onclick="guardarUsuarioInicial()" class="w-full bg-forest text-white font-extrabold py-4 rounded-2xl text-base shadow-lg active:scale-95 transition-transform">
-        Guardar y continuar
-      </button>
-    </div>
-  </div>
-
-
-  <script>
-    // =========================================================================
-    // URL DE TU GOOGLE APPS SCRIPT (COMENSALES CIUDADELA)
-    // =========================================================================
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdoxO8mbgGnosNNr2Kq9fRIV6Pm2VYFTZlt_nw0hzsHKb35vNsg04pDgxq8zvZaOk7/exec";
-    
-    let headersSheet = [];
-    let rowsSheet = [];
-    
-    let fechaIsoSeleccionada = ""; 
-    let servicioModal = "";
-    let servicioDetalleActivo = "desayuno"; 
-    let cambiosPendientes = {}; 
-    let carruselInicializado = false;
-    
-    // usuarioPropietario: Las iniciales configuradas de este dispositivo (ej: "ALR")
-    let usuarioPropietario = "";
-    // usuarioVisualizando: La persona seleccionada en el menú desplegable en este momento
-    let usuarioVisualizando = "";
-
-    let ausenciaAnio = 2026;
-    let ausenciaMes = 7; 
-    let ausenciaInicioIso = null; 
-    let ausenciaInicioMeal = "desayuno";
-    let ausenciaFinalIso = null; 
-    let ausenciaFinalMeal = "cena";
-    let focoAusencia = "inicio";
-
-    // MOTOR BLINDADO DE ESTADOS
-    function interpretarEstado(val) {
-      if (val === undefined || val === null) return "si";
-      let v = String(val).toLowerCase()
-               .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-               .replace(/\s+/g, ""); // Destruye CUALQUIER espacio
-               
-      if (v === "" || v === "si" || v === "s") return "si";
-      if (v.includes("tarde")) return "tarde";
-      if (v.includes("temp")) return "temp";
-      if (v.includes("bolsa")) return "bolsa";
-      if (v.includes("no")) return "no";
-      return "no";
-    }
-
-    async function cargarDatos() {
-      const datosCache = localStorage.getItem("comensales_cache_rows");
-      const headersCache = localStorage.getItem("comensales_cache_headers");
-
-      if (datosCache && headersCache) {
-        headersSheet = JSON.parse(headersCache);
-        rowsSheet = JSON.parse(datosCache);
-        iniciarEntorno();
-      }
-
-      try {
-        // ROMPE-CACHÉS para forzar la descarga siempre desde Drive
-        const timestamp = new Date().getTime();
-        const res = await fetch(SCRIPT_URL + "?mode=getData&t=" + timestamp, { cache: "no-store" });
-        const json = await res.json();
-        if (json.ok) {
-          headersSheet = json.headers;
-          rowsSheet = json.rows;
-          localStorage.setItem("comensales_cache_headers", JSON.stringify(headersSheet));
-          localStorage.setItem("comensales_cache_rows", JSON.stringify(rowsSheet));
-
-          iniciarEntorno();
-        }
-      } catch (err) {
-        console.warn("Sin conexión, usando datos en caché local:", err);
-      }
-    }
-
-    function iniciarEntorno() {
-      if (!fechaIsoSeleccionada) {
-        const hoy = new Date();
-        fechaIsoSeleccionada = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
-      }
-      
-      const personas = rowsSheet.map(r => r[1]).filter(p => p);
-      const guardado = localStorage.getItem("comedor_usuario_activo");
-
-      if (guardado && personas.includes(guardado)) {
-        usuarioPropietario = guardado;
-        if (!usuarioVisualizando) usuarioVisualizando = usuarioPropietario;
-      } else {
-        abrirModalSeleccionUsuarioInicial();
-        return; 
-      }
-
-      inicializarSelectUsuarios();
-      
-      if (!carruselInicializado) {
-        construirCarruselContinuo();
-        carruselInicializado = true;
-        
-        setTimeout(() => {
-          enfocarLunesDeFecha(fechaIsoSeleccionada, false); 
-          actualizarEstadoVisualCarrusel();
-          renderizarVista();
-        }, 100); 
-      } else {
-        actualizarEstadoVisualCarrusel();
-        renderizarVista();
-      }
-    }
-
-    function abrirModalSeleccionUsuarioInicial() {
-      const modal = document.getElementById("modal-usuario-inicial");
-      if (modal) modal.classList.remove("hidden");
-      poblarSelectModalInicial();
-    }
-
-    function poblarSelectModalInicial() {
-      const selectModal = document.getElementById("select-usuario-inicial");
-      const personas = rowsSheet.map(r => r[1]).filter(p => p);
-      selectModal.innerHTML = personas.map(p => `<option value="${p}">${p}</option>`).join("");
-      if (usuarioPropietario && personas.includes(usuarioPropietario)) {
-        selectModal.value = usuarioPropietario;
-      }
-    }
-
-    function guardarUsuarioInicial() {
-      const selectModal = document.getElementById("select-usuario-inicial");
-      usuarioPropietario = selectModal.value;
-      usuarioVisualizando = usuarioPropietario; 
-      
-      localStorage.setItem("comedor_usuario_activo", usuarioPropietario);
-      document.getElementById("modal-usuario-inicial").classList.add("hidden");
-      
-      inicializarSelectUsuarios();
-      
-      if (!carruselInicializado) {
-        construirCarruselContinuo();
-        carruselInicializado = true;
-        setTimeout(() => {
-          enfocarLunesDeFecha(fechaIsoSeleccionada, false); 
-          actualizarEstadoVisualCarrusel();
-          renderizarVista();
-        }, 100);
-      } else {
-        actualizarEstadoVisualCarrusel();
-        renderizarVista();
-      }
-    }
-
-    function verificarCambioUsuarioSelect(selectElement) {
-      if (selectElement.value === "CAMBIAR_PERFIL") {
-        abrirModalSeleccionUsuarioInicial();
-        selectElement.value = usuarioVisualizando;
-      } else {
-        usuarioVisualizando = selectElement.value;
-        renderizarVista();
-      }
-    }
-
-    function irAlDiaHoy() {
-      const hoy = new Date();
-      fechaIsoSeleccionada = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
-      
-      actualizarEstadoVisualCarrusel();
-      enfocarLunesDeFecha(fechaIsoSeleccionada, true);
-      renderizarVista();
-
-      const btnHoy = document.querySelector("header button");
-      btnHoy.innerText = "↻..."; 
-      
-      const timestamp = new Date().getTime();
-      fetch(SCRIPT_URL + "?mode=getData&t=" + timestamp, { cache: "no-store" })
-        .then(res => res.json())
-        .then(json => {
-          if (json.ok) {
-            headersSheet = json.headers;
-            rowsSheet = json.rows;
-            localStorage.setItem("comensales_cache_headers", JSON.stringify(headersSheet));
-            localStorage.setItem("comensales_cache_rows", JSON.stringify(rowsSheet));
-            renderizarVista(); 
-          }
-          btnHoy.innerText = "HOY"; 
-        })
-        .catch(err => {
-          console.warn("Error al refrescar los datos:", err);
-          btnHoy.innerText = "HOY";
-        });
-    }
-
-    function inicializarSelectUsuarios() {
-      const select = document.getElementById("user-select");
-      const selectAus = document.getElementById("ausencia-user-select");
-      const personas = rowsSheet.map(r => r[1]).filter(p => p);
-      
-      let optionsHtml = personas.map(p => {
-        const esMio = (p === usuarioPropietario);
-        const textoEtiqueta = esMio ? `👤 ${p}` : p;
-        return `<option value="${p}">${textoEtiqueta}</option>`;
-      }).join("");
-
-      optionsHtml += `<option value="CAMBIAR_PERFIL" style="font-weight: bold; color: #8C4340;">⚙️</option>`;
-
-      select.innerHTML = optionsHtml;
-      if (selectAus) selectAus.innerHTML = personas.map(p => `<option value="${p}">${p === usuarioPropietario ? '👤 ' + p : p}</option>`).join("");
-
-      select.value = usuarioVisualizando || usuarioPropietario;
-      if (selectAus) selectAus.value = usuarioVisualizando || usuarioPropietario;
-      
-      actualizarTituloAusencias();
-    }
-
-    // =========================================================================
-    // MOTOR CARRUSEL
-    // =========================================================================
-    function construirCarruselContinuo() {
-      const container = document.getElementById("semana-container");
-      const nombresDiasL = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-      let html = '';
-
-      const hoy = new Date();
-      let fechaBase = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-      fechaBase.setDate(fechaBase.getDate() - 70); 
-      
-      let dOw = fechaBase.getDay();
-      let diff = dOw === 0 ? -6 : 1 - dOw;
-      fechaBase.setDate(fechaBase.getDate() + diff); 
-
-      for (let i = 0; i < 147; i++) {
-        const d = new Date(fechaBase);
-        d.setDate(fechaBase.getDate() + i);
-        const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-
-        let jsDay = d.getDay(); 
-        let indexL = jsDay === 0 ? 6 : jsDay - 1; 
-        let letraDia = nombresDiasL[indexL];
-        let isMonday = (indexL === 0);
-
-        html += `
-          <div id="day-wrap-${iso}" class="flex-shrink-0 box-border px-0.5 ${isMonday ? 'snap-start' : ''}" style="flex: 0 0 calc(100% / 7);">
-            <div onclick="cambiarFecha('${iso}')" id="day-card-${iso}" class="day-card-item w-full flex flex-col items-center justify-center cursor-pointer py-2 rounded-xl transition-all hover:bg-gray-100 text-gray-700 bg-gray-50/50 border border-gray-100">
-              <div class="text-[10px] md:text-xs font-bold opacity-70">${letraDia}</div>
-              <div class="text-sm md:text-base font-extrabold mt-0.5">${d.getDate()}</div>
+        <header class="bg-teal-header text-white pt-6 pb-4 px-4 shadow-md z-30 relative shrink-0">
+            <div class="flex items-center justify-between">
+                <div class="w-14"></div>
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-car-side text-2xl opacity-90"></i>
+                    <h1 class="text-xl font-bold tracking-wider">COCHES</h1>
+                </div>
+                <button onclick="irAHoy()" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-bold py-1.5 px-3 rounded-full text-xs tracking-wider transition shadow-sm border border-white border-opacity-30">
+                    HOY
+                </button>
             </div>
-          </div>
-        `;
-      }
-      container.innerHTML = html;
-    }
-
-    function enfocarLunesDeFecha(isoStr, smooth = true) {
-      const container = document.getElementById("semana-container");
-      if (!container) return;
-
-      const [y, m, d] = isoStr.split('-').map(Number);
-      const selDate = new Date(y, m - 1, d);
-      
-      let dayOfWeek = selDate.getDay(); 
-      let diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-      let lunesFecha = new Date(selDate);
-      lunesFecha.setDate(selDate.getDate() + diffToMonday);
-
-      const isoLunes = `${lunesFecha.getFullYear()}-${String(lunesFecha.getMonth() + 1).padStart(2, '0')}-${String(lunesFecha.getDate()).padStart(2, '0')}`;
-      const elementoLunes = document.getElementById(`day-wrap-${isoLunes}`);
-
-      if (elementoLunes) {
-        const offsetObjetivo = elementoLunes.offsetLeft;
-        if (!smooth) {
-          container.style.scrollBehavior = 'auto';
-          container.scrollLeft = offsetObjetivo;
-          setTimeout(() => { container.style.scrollBehavior = 'smooth'; }, 50);
-        } else {
-          container.scrollLeft = offsetObjetivo;
-        }
-      }
-    }
-
-    function cambiarSemanaFlecha(dir) {
-      if (!fechaIsoSeleccionada) return;
-      
-      const [y, m, d] = fechaIsoSeleccionada.split('-').map(Number);
-      const dateObj = new Date(y, m - 1, d);
-      dateObj.setDate(dateObj.getDate() + (dir * 7)); 
-      
-      fechaIsoSeleccionada = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
-      
-      actualizarEstadoVisualCarrusel();
-      enfocarLunesDeFecha(fechaIsoSeleccionada, true);
-      renderizarVista();
-    }
-
-    function cambiarFecha(iso) {
-      fechaIsoSeleccionada = iso;
-      actualizarEstadoVisualCarrusel();
-      renderizarVista();
-    }
-
-    function actualizarEstadoVisualCarrusel() {
-      const tarjetas = document.querySelectorAll('.day-card-item');
-      tarjetas.forEach(t => {
-        t.className = "day-card-item w-full flex flex-col items-center justify-center cursor-pointer py-2 rounded-xl transition-all hover:bg-gray-100 text-gray-700 bg-gray-50/50 border border-gray-100";
-      });
-
-      const tarjetaActiva = document.getElementById(`day-card-${fechaIsoSeleccionada}`);
-      if (tarjetaActiva) {
-        tarjetaActiva.className = "day-card-item w-full flex flex-col items-center justify-center cursor-pointer py-2 rounded-xl transition-all bg-forest text-white shadow-sm scale-105";
-      }
-
-      const [sy, sm, sd] = fechaIsoSeleccionada.split('-').map(Number);
-      const selDate = new Date(sy, sm - 1, sd);
-      const mesNombre = selDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-      document.getElementById("mes-anio-label").textContent = mesNombre.toUpperCase();
-    }
-
-    // =========================================================================
-    // MODALES Y OBSERVACIONES
-    // =========================================================================
-    function abrirModalEstado(meal) {
-      servicioModal = meal;
-      document.getElementById("modal-titulo").textContent = `Estado para ${meal}`;
-      document.getElementById("modal-estado").classList.remove("hidden");
-    }
-
-    function cerrarModal() {
-      document.getElementById("modal-estado").classList.add("hidden");
-    }
-
-    function asignarEstadoLocal(valNuevo) {
-      cerrarModal();
-      const clave = `${usuarioVisualizando}|${fechaIsoSeleccionada}|${servicioModal}`;
-      cambiosPendientes[clave] = valNuevo;
-      actualizarEstadoBotonGuardarSup();
-      renderizarVista();
-    }
-
-    function abrirModalObservaciones() {
-      cerrarModal(); 
-      const container = document.getElementById("lista-observaciones-inputs");
-      container.innerHTML = "";
-      
-      const colIndex = encontrarColumnaFechaExacta(fechaIsoSeleccionada);
-      if (colIndex === -1) {
-        alert("El día seleccionado no se encuentra en la base de datos.");
-        return;
-      }
-
-      let obsArray = [];
-      const pendienteObs = cambiosPendientes["OBS_ARRAY|" + fechaIsoSeleccionada];
-
-      if (pendienteObs !== undefined) {
-         obsArray = [...pendienteObs];
-      } else {
-         let obsRowIndex = -1;
-         for (let r = 0; r < rowsSheet.length; r++) {
-           if (String(rowsSheet[r][colIndex] || "").trim().toLowerCase().includes("observaciones")) {
-             obsRowIndex = r;
-             break;
-           }
-         }
-         
-         if (obsRowIndex !== -1) {
-           for (let r = obsRowIndex + 1; r < rowsSheet.length; r++) {
-             const val = String(rowsSheet[r][colIndex] || "").trim();
-             if (val === "") break; 
-             if (val.toLowerCase().includes("observaciones")) break;
-             obsArray.push(val);
-           }
-         } else {
-           container.innerHTML = `<p class="text-sm text-gray-500 text-center py-4">No hay sección de observaciones para este día.</p>`;
-           document.getElementById("modal-observaciones").classList.remove("hidden");
-           return;
-         }
-      }
-
-      obsArray.push("");
-
-      let html = "";
-      obsArray.forEach((text, index) => {
-        const esNuevo = (index === obsArray.length - 1);
-        html += `
-          <div>
-            <textarea id="obs-input-${index}" rows="2" class="obs-input-field w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-800 outline-none focus:border-forest transition-colors shadow-sm" placeholder="${esNuevo ? 'Escribir nueva observación...' : 'Editar o borrar observación...'}">${text}</textarea>
-          </div>
-        `;
-      });
-
-      container.innerHTML = html;
-      document.getElementById("modal-observaciones").classList.remove("hidden");
-    }
-
-    function cerrarModalObservaciones() {
-      document.getElementById("modal-observaciones").classList.add("hidden");
-    }
-
-    function guardarObservacionesLocales() {
-      const inputs = document.querySelectorAll('.obs-input-field');
-      let nuevosValores = [];
-      
-      inputs.forEach(input => {
-         const val = input.value.trim();
-         if (val !== "") nuevosValores.push(val); 
-      });
-
-      cambiosPendientes["OBS_ARRAY|" + fechaIsoSeleccionada] = nuevosValores;
-      cerrarModalObservaciones();
-      actualizarEstadoBotonGuardarSup();
-      renderizarVista();
-    }
-
-    function actualizarEstadoBotonGuardarSup() {
-      const numCambios = Object.keys(cambiosPendientes).length;
-      const contenedorSup = document.getElementById("contenedor-btn-guardar-sup");
-      const btnTxtSup = document.getElementById("btn-guardar-txt-sup");
-      const syncStatus = document.getElementById("sync-status");
-
-      if (numCambios > 0) {
-        contenedorSup.classList.remove("hidden");
-        btnTxtSup.textContent = `Guardar cambios (${numCambios} pendientes)`;
-        syncStatus.textContent = "Pendiente";
-      } else {
-        contenedorSup.classList.add("hidden");
-      }
-    }
-
-    // =========================================================================
-    // VISUALIZACIÓN PRINCIPAL Y DESGLOSES
-    // =========================================================================
-    function seleccionarServicioDetalle(servicio) {
-      servicioDetalleActivo = servicio; 
-      actualizarEstilosTarjetasResumen();
-      renderizarVista();
-    }
-
-    function actualizarEstilosTarjetasResumen() {
-      const cardDesay = document.getElementById("card-tot-desay");
-      const cardAlm = document.getElementById("card-tot-alm");
-      const cardCena = document.getElementById("card-tot-cena");
-
-      // Clases para las tarjetas NO seleccionadas (Fondo blanco dentro de la zona naranja)
-      const claseInactiva = "bg-white/95 rounded-[18px] p-3 shadow-sm border-none cursor-pointer transition-all text-gray-900 flex flex-col items-center justify-center text-center min-h-[120px]";
-      const headerInactivo = "text-[11px] md:text-xs text-gray-500 block mb-1 w-full text-left font-extrabold tracking-widest uppercase";
-      const numberInactivo = "text-5xl md:text-6xl font-black text-gray-900 my-auto";
-      const subInactivo = "text-sm md:text-base font-extrabold text-gray-500 mt-1 min-h-[20px] leading-tight text-center w-full break-words";
-
-      cardDesay.className = claseInactiva;
-      cardAlm.className = claseInactiva;
-      cardCena.className = claseInactiva;
-
-      cardDesay.querySelector("span:first-child").className = headerInactivo;
-      cardDesay.querySelector("span:nth-child(2)").className = numberInactivo;
-      cardDesay.querySelector("div:last-child").className = subInactivo;
-
-      cardAlm.querySelector("span:first-child").className = headerInactivo;
-      cardAlm.querySelector("span:nth-child(2)").className = numberInactivo;
-      cardAlm.querySelector("div:last-child").className = subInactivo;
-
-      cardCena.querySelector("span:first-child").className = headerInactivo;
-      cardCena.querySelector("span:nth-child(2)").className = numberInactivo;
-      cardCena.querySelector("div:last-child").className = subInactivo;
-
-      // Clases para la tarjeta SELECCIONADA (Fondo Verde Bosque dentro de la zona naranja)
-      const claseActiva = "bg-[#264334] text-white rounded-[18px] p-3 shadow-lg border-none cursor-pointer transition-all flex flex-col items-center justify-center text-center min-h-[120px]";
-
-      let cardActiva = cardDesay;
-      if (servicioDetalleActivo === 'almuerzo') cardActiva = cardAlm;
-      if (servicioDetalleActivo === 'cena') cardActiva = cardCena;
-
-      cardActiva.className = claseActiva;
-      cardActiva.querySelector("span:first-child").className = "text-[11px] md:text-xs text-white/90 block mb-1 w-full text-left font-extrabold tracking-widest uppercase";
-      cardActiva.querySelector("span:nth-child(2)").className = "text-5xl md:text-6xl font-black text-white my-auto";
-      cardActiva.querySelector("div:last-child").className = "text-sm md:text-base font-extrabold text-white/90 mt-1 min-h-[20px] leading-tight text-center w-full break-words";
-    }
-
-    function renderizarVista() {
-      const colIndex = encontrarColumnaFechaExacta(fechaIsoSeleccionada);
-      const filaPersona = rowsSheet.find(r => r[1] === usuarioVisualizando);
-
-      const labelTuEsteDia = document.getElementById("label-tu-este-dia");
-      if (usuarioVisualizando === usuarioPropietario) {
-        labelTuEsteDia.textContent = "Tú este día (Pulsa para cambiar)";
-      } else {
-        labelTuEsteDia.textContent = `${usuarioVisualizando} este día (Pulsa para cambiar)`;
-      }
-
-      if (colIndex !== -1 && filaPersona) {
-        const vDesay = cambiosPendientes[`${usuarioVisualizando}|${fechaIsoSeleccionada}|desayuno`] !== undefined ? cambiosPendientes[`${usuarioVisualizando}|${fechaIsoSeleccionada}|desayuno`] : filaPersona[colIndex];
-        const vAlm = cambiosPendientes[`${usuarioVisualizando}|${fechaIsoSeleccionada}|almuerzo`] !== undefined ? cambiosPendientes[`${usuarioVisualizando}|${fechaIsoSeleccionada}|almuerzo`] : filaPersona[colIndex + 1];
-        const vCena = cambiosPendientes[`${usuarioVisualizando}|${fechaIsoSeleccionada}|cena`] !== undefined ? cambiosPendientes[`${usuarioVisualizando}|${fechaIsoSeleccionada}|cena`] : filaPersona[colIndex + 2];
-
-        document.getElementById("tu-desayuno").textContent = formatearVisual(vDesay);
-        document.getElementById("tu-almuerzo").textContent = formatearVisual(vAlm);
-        document.getElementById("tu-cena").textContent = formatearVisual(vCena);
-      }
-
-      const [y, m, d] = fechaIsoSeleccionada.split('-').map(Number);
-      const dateObj = new Date(y, m - 1, d);
-      document.getElementById("dia-num").textContent = d;
-      document.getElementById("dia-txt").textContent = dateObj.toLocaleDateString('es-ES', { weekday: 'long' }).toUpperCase();
-      document.getElementById("mes-txt").textContent = `DE ${dateObj.toLocaleDateString('es-ES', { month: 'long' }).toUpperCase()}`;
-
-      let listaNotas = [];
-      const pendienteObs = cambiosPendientes["OBS_ARRAY|" + fechaIsoSeleccionada];
-
-      if (pendienteObs !== undefined) {
-         listaNotas = [...pendienteObs];
-      } else if (colIndex !== -1 && rowsSheet.length > 0) {
-        let obsRowIndex = -1;
-        for (let r = 0; r < rowsSheet.length; r++) {
-          if (String(rowsSheet[r][colIndex] || "").trim().toLowerCase().includes("observaciones")) {
-            obsRowIndex = r;
-            break;
-          }
-        }
-        if (obsRowIndex !== -1) {
-          for (let r = obsRowIndex + 1; r < rowsSheet.length; r++) {
-             const val = String(rowsSheet[r][colIndex] || "").trim();
-             if (val === "") break;
-             listaNotas.push(val);
-          }
-        }
-      }
-
-      const contenedorNota = document.getElementById("contenedor-nota");
-      const textoNotaDiv = document.getElementById("texto-nota");
-      if (listaNotas.length > 0) {
-        textoNotaDiv.innerHTML = listaNotas.map(linea => `<div>${linea}</div>`).join("");
-        contenedorNota.classList.remove("hidden");
-      } else {
-        contenedorNota.classList.add("hidden");
-      }
-
-      let cDesay = 0, cAlm = 0, cCena = 0;
-      let espDesay = {tarde: 0, temp: 0, bolsa: 0};
-      let espAlm = {tarde: 0, temp: 0, bolsa: 0};
-      let espCena = {tarde: 0, temp: 0, bolsa: 0};
-
-      let listSi = [];
-      let listEsp = [];
-      let listNo = [];
-
-      rowsSheet.forEach(r => {
-        const pName = r[1];
-        if (!pName) return;
-        const colF = encontrarColumnaFechaExacta(fechaIsoSeleccionada);
-        if (colF !== -1) {
-          
-          const valDReal = cambiosPendientes[`${pName}|${fechaIsoSeleccionada}|desayuno`];
-          const valAReal = cambiosPendientes[`${pName}|${fechaIsoSeleccionada}|almuerzo`];
-          const valCReal = cambiosPendientes[`${pName}|${fechaIsoSeleccionada}|cena`];
-
-          const dEstado = interpretarEstado(valDReal !== undefined ? valDReal : r[colF]);
-          const aEstado = interpretarEstado(valAReal !== undefined ? valAReal : r[colF + 1]);
-          const cEstado = interpretarEstado(valCReal !== undefined ? valCReal : r[colF + 2]);
-
-          if (dEstado === "si") cDesay++;
-          else if (dEstado === "tarde") espDesay.tarde++;
-          else if (dEstado === "temp") espDesay.temp++;
-          else if (dEstado === "bolsa") espDesay.bolsa++;
-
-          if (aEstado === "si") cAlm++;
-          else if (aEstado === "tarde") espAlm.tarde++;
-          else if (aEstado === "temp") espAlm.temp++;
-          else if (aEstado === "bolsa") espAlm.bolsa++;
-
-          if (cEstado === "si") cCena++;
-          else if (cEstado === "tarde") espCena.tarde++;
-          else if (cEstado === "temp") espCena.temp++;
-          else if (cEstado === "bolsa") espCena.bolsa++;
-
-          const offset = servicioDetalleActivo === 'desayuno' ? 0 : (servicioDetalleActivo === 'almuerzo' ? 1 : 2);
-          const valPendiente = cambiosPendientes[`${pName}|${fechaIsoSeleccionada}|${servicioDetalleActivo}`];
-          const estadoCelda = interpretarEstado(valPendiente !== undefined ? valPendiente : r[colF + offset]);
-
-          if (estadoCelda === "si") {
-            listSi.push(pName);
-          } else if (estadoCelda === "tarde" || estadoCelda === "temp" || estadoCelda === "bolsa") {
-            let etiqueta = estadoCelda === 'tarde' ? 'Tarde' : (estadoCelda === 'temp' ? 'Temprano' : 'Bolsa');
-            listEsp.push(`${pName} (${etiqueta})`);
-          } else {
-            if (pName !== 'Inv 1' && pName !== 'Inv 2') {
-              listNo.push(pName);
-            }
-          }
-        }
-      });
-
-      document.getElementById("tot-desayuno").textContent = cDesay;
-      document.getElementById("tot-almuerzo").textContent = cAlm;
-      document.getElementById("tot-cena").textContent = cCena;
-
-      const formatSpecials = (esp) => {
-        let parts = [];
-        if (esp.bolsa > 0) parts.push(`+${esp.bolsa} bolsa`);
-        if (esp.tarde > 0) parts.push(`+${esp.tarde} tarde`);
-        if (esp.temp > 0) parts.push(`+${esp.temp} temp`);
-        return parts.join(' ');
-      };
-
-      document.getElementById("sub-tot-desayuno").textContent = formatSpecials(espDesay);
-      document.getElementById("sub-tot-almuerzo").textContent = formatSpecials(espAlm);
-      document.getElementById("sub-tot-cena").textContent = formatSpecials(espCena);
-
-      const nombreServicioCapitalizado = servicioDetalleActivo.toUpperCase();
-      document.getElementById("titulo-seccion-comen").textContent = `COMEN · ${nombreServicioCapitalizado}`;
-      document.getElementById("titulo-seccion-esp").textContent = `TARDE / TEMP / BOLSA · ${nombreServicioCapitalizado}`;
-      document.getElementById("titulo-seccion-no").textContent = `NO VIENEN · ${nombreServicioCapitalizado}`;
-
-      document.getElementById("count-comen").textContent = listSi.length;
-      document.getElementById("count-esp").textContent = listEsp.length;
-      document.getElementById("count-no").textContent = listNo.length;
-
-      document.getElementById("list-comen").innerHTML = listSi.map(i => `<span class="badge-present text-xs md:text-sm font-bold px-3.5 py-1.5 rounded-full">${i}</span>`).join("");
-      document.getElementById("list-no").innerHTML = listNo.map(i => `<span class="badge-absent text-xs md:text-sm font-bold px-3.5 py-1.5 rounded-full">${i}</span>`).join("");
-      
-      const seccionEspecial = document.getElementById("seccion-especial");
-      if (listEsp.length > 0) {
-        seccionEspecial.classList.remove("hidden");
-        document.getElementById("list-esp").innerHTML = listEsp.map(i => `<span class="badge-special text-xs md:text-sm font-bold px-3.5 py-1.5 rounded-full">${i}</span>`).join("");
-      } else {
-        seccionEspecial.classList.add("hidden");
-      }
-      
-      actualizarEstilosTarjetasResumen();
-    }
-
-    function encontrarColumnaFechaExacta(iso) {
-      const [y, m, d] = iso.split('-').map(Number);
-      const target = new Date(y, m - 1, d);
-      const mesesMap = { ene:0, enero:0, feb:1, febrero:1, mar:2, marzo:2, abr:3, abril:3, may:4, mayo:4, jun:5, junio:5, jul:6, julio:6, ago:7, agosto:7, sept:8, sep:8, septiembre:8, oct:9, octubre:9, nov:10, noviembre:10, dic:11, diciembre:11 };
-
-      for (let c = 0; c < headersSheet.length; c++) {
-        const text = String(headersSheet[c]).toLowerCase();
-        const match = text.match(/(\d{1,2})\s*[-/]\s*([a-záéíóú]+)/);
-        if (match) {
-          const headD = parseInt(match[1], 10);
-          const headM = mesesMap[match[2]];
-          if (headM !== undefined) {
-            const hDate = new Date(2026, headM, headD);
-            if (hDate.getFullYear() === target.getFullYear() && hDate.getMonth() === target.getMonth() && hDate.getDate() === target.getDate()) {
-              if (text.includes('desay') || text.includes('desayuno')) return c;
-              return c;
-            }
-          }
-        }
-      }
-      return -1;
-    }
-
-    function formatearVisual(val) {
-      const estado = interpretarEstado(val);
-      if (estado === "si") return "Sí";
-      if (estado === "no") return "No";
-      if (estado === "tarde") return "Tarde";
-      if (estado === "temp") return "Temprano";
-      if (estado === "bolsa") return "Bolsa";
-      return val; 
-    }
-
-    // =========================================================================
-    // GESTIÓN DE AUSENCIAS
-    // =========================================================================
-    function abrirPantallaAusencias() {
-      document.getElementById("pantalla-principal").classList.add("hidden");
-      document.getElementById("pantalla-ausencias").classList.remove("hidden");
-      
-      document.getElementById("ausencia-user-select").value = usuarioVisualizando || usuarioPropietario;
-      actualizarTituloAusencias();
-
-      ausenciaInicioIso = fechaIsoSeleccionada;
-      ausenciaFinalIso = null;
-      ausenciaInicioMeal = "desayuno";
-      ausenciaFinalMeal = "cena";
-      focoAusencia = "inicio";
-
-      resetearBotonGuardarRango();
-      actualizarTarjetasInicioFinAusencias();
-    }
-
-    function cerrarPantallaAusencias() {
-      document.getElementById("pantalla-ausencias").classList.add("hidden");
-      document.getElementById("pantalla-principal").classList.remove("hidden");
-      renderizarVista();
-    }
-
-    function actualizarTituloAusencias() {
-      const u = document.getElementById("ausencia-user-select").value;
-      document.getElementById("titulo-pantalla-ausencias").textContent = `Ausencias de ${u}`;
-    }
-
-    function seleccionarFocoAusencia(foco) {
-      focoAusencia = foco;
-      actualizarTarjetasInicioFinAusencias();
-    }
-
-    function setMealInicio(meal) {
-      ausenciaInicioMeal = meal;
-      actualizarTarjetasInicioFinAusencias();
-    }
-
-    function setMealFinal(meal) {
-      ausenciaFinalMeal = meal;
-      actualizarTarjetasInicioFinAusencias();
-    }
-
-    function formatFechaBonita(isoStr) {
-      if (!isoStr) return "Elige un día";
-      const [y, m, d] = isoStr.split('-').map(Number);
-      const date = new Date(y, m - 1, d);
-      return date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
-    }
-
-    function actualizarTarjetasInicioFinAusencias() {
-      document.getElementById("ausencia-inicio-txt").textContent = formatFechaBonita(ausenciaInicioIso);
-      document.getElementById("ausencia-final-txt").textContent = formatFechaBonita(ausenciaFinalIso);
-
-      const cardIni = document.getElementById("card-ausencia-inicio");
-      const cardFin = document.getElementById("card-ausencia-final");
-      const badgeIni = document.getElementById("badge-foco-inicio");
-      const badgeFin = document.getElementById("badge-foco-final");
-
-      if (focoAusencia === "inicio") {
-        cardIni.className = "bg-[#F7FAF8] border-2 border-[#264334] rounded-2xl p-4 md:p-5 mb-3 shadow-md cursor-pointer transition-all";
-        cardFin.className = "bg-white border-2 border-gray-200 rounded-2xl p-4 md:p-5 mb-4 shadow-sm cursor-pointer transition-all opacity-85";
-        badgeIni.classList.remove("hidden");
-        badgeFin.classList.add("hidden");
-      } else {
-        cardIni.className = "bg-white border-2 border-gray-200 rounded-2xl p-4 md:p-5 mb-3 shadow-sm cursor-pointer transition-all opacity-85";
-        cardFin.className = "bg-[#F7FAF8] border-2 border-[#264334] rounded-2xl p-4 md:p-5 mb-4 shadow-md cursor-pointer transition-all";
-        badgeIni.classList.add("hidden");
-        badgeFin.classList.remove("hidden");
-      }
-
-      ['desayuno', 'almuerzo', 'cena'].forEach(m => {
-        const btn = document.getElementById(`btn-ini-${m}`);
-        btn.className = ausenciaInicioMeal === m ? "py-3 rounded-xl font-bold text-xs md:text-sm bg-forest text-white transition-all shadow-sm" : "py-3 rounded-xl font-bold text-xs md:text-sm bg-gray-100 text-gray-700 transition-all";
-      });
-
-      ['desayuno', 'almuerzo', 'cena'].forEach(m => {
-        const btn = document.getElementById(`btn-fin-${m}`);
-        btn.className = ausenciaFinalMeal === m ? "py-3 rounded-xl font-bold text-xs md:text-sm bg-forest text-white transition-all shadow-sm" : "py-3 rounded-xl font-bold text-xs md:text-sm bg-gray-100 text-gray-700 transition-all";
-      });
-
-      renderizarCalendarioAusencias();
-    }
-
-    function cambiarMesCalendario(dir) {
-      ausenciaMes += dir;
-      if (ausenciaMes > 11) { ausenciaMes = 0; ausenciaAnio++; }
-      if (ausenciaMes < 0) { ausenciaMes = 11; ausenciaAnio--; }
-      renderizarCalendarioAusencias();
-    }
-
-    function renderizarCalendarioAusencias() {
-      const mesesNombres = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-      document.getElementById("cal-mes-anio-label").textContent = `${mesesNombres[ausenciaMes]} de ${ausenciaAnio}`;
-
-      const grid = document.getElementById("cal-dias-grid");
-      const primerDiaMes = new Date(ausenciaAnio, ausenciaMes, 1);
-      const ultimoDiaMes = new Date(ausenciaAnio, ausenciaMes + 1, 0);
-      
-      let inicioDiaSemana = primerDiaMes.getDay() - 1; 
-      if (inicioDiaSemana === -1) inicioDiaSemana = 6;
-
-      let html = '';
-      for (let i = 0; i < inicioDiaSemana; i++) {
-        html += `<div></div>`;
-      }
-
-      for (let d = 1; d <= ultimoDiaMes.getDate(); d++) {
-        const iso = `${ausenciaAnio}-${String(ausenciaMes + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        let clases = "h-11 md:h-12 flex items-center justify-center rounded-xl cursor-pointer text-sm md:text-base font-bold transition-all ";
+        </header>
+
+        <main class="flex-1 flex w-full relative bg-white overflow-hidden">
+            <div class="w-[50px] flex-shrink-0 flex flex-col bg-gray-50 border-r border-gray-200 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                <div class="h-[52px] w-full flex items-center justify-center border-b border-gray-200 bg-gray-100">
+                    <button onclick="scrollSieteDias(-1)" class="w-8 h-8 flex items-center justify-center text-teal-700 hover:bg-gray-200 rounded-full transition">
+                        <i class="fas fa-chevron-left text-sm"></i>
+                    </button>
+                </div>
+                <div id="fixed-cars-col" class="flex flex-col pb-24"></div>
+            </div>
+
+            <div id="scroll-container" class="flex-1 relative bg-white">
+                <div id="calendar-grid" class="flex gap-x-[2px] px-1 pb-24"></div>
+            </div>
+
+            <div class="absolute right-0 top-0 h-[52px] w-8 bg-gradient-to-l from-white via-white to-transparent flex items-center justify-end pr-1 z-20 pointer-events-none">
+                <button onclick="scrollSieteDias(1)" class="w-6 h-8 text-teal-700 flex items-center justify-center pointer-events-auto hover:text-teal-900 transition">
+                    <i class="fas fa-chevron-right text-sm"></i>
+                </button>
+            </div>
+        </main>
         
-        const esInicio = iso === ausenciaInicioIso;
-        const esFinal = iso === ausenciaFinalIso;
-        const enRango = ausenciaInicioIso && ausenciaFinalIso && iso > ausenciaInicioIso && iso < ausenciaFinalIso;
+        <div id="floating-loader" class="fixed bottom-[88px] right-6 bg-gray-800 text-white px-4 py-2.5 rounded-full shadow-lg flex items-center justify-center text-xs font-semibold transition-opacity duration-300 z-40 opacity-0 hidden pointer-events-none border border-gray-700">
+            <i class="fas fa-spinner fa-spin mr-2 text-teal-400 text-sm"></i> Cargando datos de Excel...
+        </div>
 
-        if (esInicio || esFinal) {
-          clases += "bg-forest text-white shadow-md";
-        } else if (enRango) {
-          clases += "bg-[#DDEEE6] text-[#235944]";
-        } else {
-          clases += "hover:bg-gray-100 text-gray-800";
-        }
+        <button onclick="abrirViajeModal()" class="fab-btn fixed bottom-6 right-6 bg-teal-700 text-white px-5 py-3.5 rounded-full shadow-2xl flex items-center justify-center hover:bg-teal-800 transition z-50 border-2 border-white">
+            <i class="fas fa-route text-xl mr-2"></i>
+            <span class="text-sm font-bold uppercase tracking-wide">Añadir Viaje</span>
+        </button>
+    </div>
 
-        html += `<div onclick="seleccionarDiaCalendario('${iso}')" class="${clases}">${d}</div>`;
-      }
-
-      grid.innerHTML = html;
-    }
-
-    function seleccionarDiaCalendario(iso) {
-      if (focoAusencia === "inicio") {
-        ausenciaInicioIso = iso;
-        if (!ausenciaFinalIso || ausenciaFinalIso < iso) {
-          ausenciaFinalIso = iso;
-        }
-        focoAusencia = "final";
-      } else {
-        if (ausenciaInicioIso && iso < ausenciaInicioIso) {
-          ausenciaInicioIso = iso;
-        } else {
-          ausenciaFinalIso = iso;
-        }
-      }
-      actualizarTarjetasInicioFinAusencias();
-    }
-
-    function resetearBotonGuardarRango() {
-      const btn = document.getElementById("btn-guardar-ausencias-rango");
-      const txtIcono = document.getElementById("btn-guardar-rango-icono");
-      const txtSub = document.getElementById("btn-guardar-rango-sub");
-      btn.disabled = false;
-      btn.className = "w-full bg-[#E8E6DF] hover:bg-[#DEDCD5] text-gray-800 font-extrabold py-4 rounded-full flex flex-col items-center justify-center text-sm md:text-base shadow-md active:scale-95 transition-all";
-      txtIcono.textContent = "💾 Guardar ausencias";
-      txtSub.classList.add("hidden");
-    }
-
-    async function ejecutarGuardarAusenciasRango() {
-      const persona = document.getElementById("ausencia-user-select").value;
-      if (!ausenciaInicioIso || !ausenciaFinalIso) {
-        seleccionarFocoAusencia(ausenciaInicioIso ? "final" : "inicio");
-        return;
-      }
-
-      const mealOffset = { desayuno: 0, almuerzo: 1, cena: 2 };
-      const startSlot = new Date(ausenciaInicioIso).getTime() / 86400000 * 3 + mealOffset[ausenciaInicioMeal];
-      const endSlot = new Date(ausenciaFinalIso).getTime() / 86400000 * 3 + mealOffset[ausenciaFinalMeal];
-
-      if (endSlot < startSlot) {
-        alert("La fecha/comida final no puede ser anterior a la inicial.");
-        return;
-      }
-
-      const btn = document.getElementById("btn-guardar-ausencias-rango");
-      const txtIcono = document.getElementById("btn-guardar-rango-icono");
-      const txtSub = document.getElementById("btn-guardar-rango-sub");
-
-      btn.disabled = true;
-      txtIcono.textContent = "Guardando ausencias...";
-      txtSub.classList.remove("hidden");
-      txtSub.textContent = "Guardando en Drive...";
-
-      try {
-        const response = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            mode: "range",
-            person: persona,
-            from: ausenciaInicioIso,
-            fromMeal: ausenciaInicioMeal,
-            to: ausenciaFinalIso,
-            toMeal: ausenciaFinalMeal,
-            value: "no"
-          })
-        });
-        const json = await response.json();
-        
-        if (json.ok) {
-          btn.className = "w-full bg-[#DDEEE6] text-[#235944] font-extrabold py-4 rounded-full flex flex-col items-center justify-center text-sm md:text-base shadow-md transition-all";
-          txtIcono.textContent = "✓ Datos guardados";
-          txtSub.textContent = "Actualizado correctamente";
-
-          setTimeout(() => {
-            cerrarPantallaAusencias();
+    <!-- MODAL RESERVA -->
+    <div id="reservaModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-4 border-b pb-2 border-gray-100">
+                <h2 id="modalTitle" class="text-xl font-bold text-teal-800">Reserva</h2>
+                <button onclick="cerrarModal('reservaModal')" class="text-gray-400 text-2xl">&times;</button>
+            </div>
             
-            // Refresco de datos con cache-buster al guardar rango
-            const timestamp = new Date().getTime();
-            fetch(SCRIPT_URL + "?mode=getData&t=" + timestamp, { cache: "no-store" })
-              .then(r => r.json())
-              .then(j => {
-                if (j.ok) {
-                  headersSheet = j.headers;
-                  rowsSheet = j.rows;
-                  localStorage.setItem("comensales_cache_headers", JSON.stringify(headersSheet));
-                  localStorage.setItem("comensales_cache_rows", JSON.stringify(rowsSheet));
-                  renderizarVista();
+            <div id="avisoTallerBox" class="hidden mb-4 bg-amber-50 border-l-4 border-amber-700 p-3 rounded-lg text-sm text-amber-900">
+                <strong class="flex items-center mb-1"><i class="fas fa-tools mr-2 text-amber-700"></i> Observación de Taller</strong>
+                <p id="avisoTallerText" class="italic"></p>
+            </div>
+
+            <div class="mb-5 text-gray-700 bg-gray-50 p-3 rounded-lg text-sm">
+                <p><i class="fas fa-car text-teal-600 mr-2"></i> <strong id="modalCoche"></strong></p>
+                <p class="mt-1"><i class="far fa-calendar-alt text-teal-600 mr-2"></i> <span id="modalFecha"></span> (<span id="modalTurno" class="font-semibold"></span>)</p>
+            </div>
+            <form id="formReserva" onsubmit="enviarReservaNormal(event)">
+                <input type="text" id="inputNombre" placeholder="Tu Nombre o Horario..." class="w-full mb-2 border-2 border-gray-200 rounded-xl p-3 text-lg focus:border-teal-600 focus:outline-none">
+                <p class="text-[11px] text-gray-500 mb-4">Déjalo en blanco para eliminar la reserva.</p>
+                <button type="submit" id="btnConfirmarReserva" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mb-2 flex justify-center items-center">Guardar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DATOS COCHE -->
+    <div id="infoCocheModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl max-h-[90vh] flex flex-col">
+            
+            <div class="relative flex items-center justify-center mb-3">
+                <div class="w-12 h-12 bg-teal-50 rounded-full flex items-center justify-center text-teal-700 text-xl border border-teal-100">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <button id="btnConfigCoche" onclick="toggleEditCoche()" class="absolute right-0 top-1 text-gray-400 hover:text-teal-600 text-xl transition p-2">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+            
+            <h3 class="text-lg font-bold text-gray-800 text-center mb-4" id="infoCocheTitle">Datos Vehículo</h3>
+            
+            <div id="infoCocheContent" class="text-gray-600 text-sm bg-gray-50 p-3 rounded-xl border border-gray-100 flex-1 overflow-y-auto mb-4"></div>
+            
+            <div id="infoCocheActions">
+                <button onclick="abrirTallerModal()" class="w-full bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 font-bold py-3 rounded-xl transition flex items-center justify-center mb-2">
+                    <i class="fas fa-tools mr-2"></i> Observación Taller
+                </button>
+                <button onclick="cerrarModal('infoCocheModal')" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl transition">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL VIAJE -->
+    <div id="viajeModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-3 border-b pb-2 border-gray-100">
+                <h2 class="text-xl font-bold text-teal-800"><i class="fas fa-route mr-2"></i>Añadir Viaje</h2>
+                <button onclick="cerrarModal('viajeModal')" class="text-gray-400 text-2xl">&times;</button>
+            </div>
+            <form onsubmit="enviarViaje(event)">
+                <div class="mb-3">
+                    <label class="text-xs font-bold text-gray-500 uppercase">Coche</label>
+                    <select id="viajeCoche" class="w-full border border-gray-300 p-2 rounded-lg bg-white mt-1"></select>
+                </div>
+                <div class="mb-3">
+                    <label class="text-xs font-bold text-gray-500 uppercase">Nombre / Conductor</label>
+                    <input type="text" id="viajeNombre" required class="w-full border border-gray-300 p-2 rounded-lg mt-1">
+                </div>
+                <div class="flex gap-2 mb-3">
+                    <div class="w-1/2">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Inicio</label>
+                        <input type="date" id="viajeFechaIn" required class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm">
+                        <select id="viajeTurnoIn" class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm"><option>Mañana</option><option>Tarde</option></select>
+                    </div>
+                    <div class="w-1/2">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Fin</label>
+                        <input type="date" id="viajeFechaFin" required class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm">
+                        <select id="viajeTurnoFin" class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm"><option>Mañana</option><option>Tarde</option></select>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mt-2 flex justify-center items-center">Guardar Viaje</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL TALLER -->
+    <div id="tallerModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl border-[3px] border-amber-700">
+            <div class="flex justify-between items-center mb-3 border-b pb-2 border-amber-100">
+                <h2 class="text-xl font-bold text-amber-800">
+                    <span id="tallerMainTitleText"><i class="fas fa-tools mr-2"></i>Taller:</span> 
+                    <span id="tallerCocheName" class="ml-1 text-lg"></span>
+                </h2>
+                <button onclick="cerrarModal('tallerModal')" class="text-gray-400 text-2xl">&times;</button>
+            </div>
+            <form onsubmit="enviarTaller(event)">
+                <div class="mb-3">
+                    <label class="text-xs font-bold text-gray-500 uppercase">Observación</label>
+                    <textarea id="tallerObs" required class="w-full border border-gray-300 p-2 rounded-lg mt-1 focus:border-amber-500 focus:outline-none" rows="2" placeholder="Ej: Cambio de aceite..."></textarea>
+                </div>
+                <div class="flex gap-2 mb-4">
+                    <div class="w-1/2">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Inicio Espera</label>
+                        <input type="date" id="tallerFechaIn" required class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm focus:border-amber-500 focus:outline-none">
+                        <select id="tallerTurnoIn" class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm focus:border-amber-500 focus:outline-none"><option>Mañana</option><option>Tarde</option></select>
+                    </div>
+                    <div class="w-1/2">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Fin Espera</label>
+                        <input type="date" id="tallerFechaFin" required class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm focus:border-amber-500 focus:outline-none">
+                        <select id="tallerTurnoFin" class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm focus:border-amber-500 focus:outline-none"><option>Mañana</option><option>Tarde</option></select>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button type="submit" id="btnTaller" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-3 rounded-xl flex items-center justify-center transition">Aplicar Taller</button>
+                    <button type="button" id="btnBorrarTaller" onclick="borrarTaller()" class="hidden w-full bg-white border border-amber-200 text-amber-700 hover:bg-amber-50 font-bold py-3 rounded-xl transition flex items-center justify-center">
+                        <i class="fas fa-trash-alt mr-2"></i> Quitar del Taller
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7RyhObzV_0lLV4Wc_10BSCvY6Y0iAUWKAJt6gsH641xsEXvQtzPSgb3X_jfuMGXkLgw/exec';
+        
+        const coches = [
+            { id: "BLANCO", alias: "Qashqai<br>Blanco" },
+            { id: "POLO", alias: "Polo" },
+            { id: "KONA", alias: "Kona" },
+            { id: "ATECA", alias: "Ateca" },
+            { id: "GRIS", alias: "Qashqai<br>Gris" }
+        ];
+
+        const diasNombres = ['D', 'L', 'M', 'X', 'J', 'V', 'S']; 
+        
+        let reservasActivas = new Map();
+        let infoCochesGlobal = {}; 
+        let currentCocheIdForTaller = "";
+        let isEditModeInfo = false; 
+        
+        let arrayFechas = [];
+        let baseDate = new Date();
+        baseDate.setHours(0,0,0,0);
+        baseDate.setDate(baseDate.getDate() - 15);
+        for(let i=0; i<60; i++) {
+            let d = new Date(baseDate);
+            d.setDate(baseDate.getDate() + i);
+            arrayFechas.push(d);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const selectCoche = document.getElementById('viajeCoche');
+            coches.forEach(c => selectCoche.innerHTML += `<option value="${c.id}">${c.alias.replace('<br>',' ')}</option>`);
+            
+            const hoyIso = new Date().toISOString().split('T')[0];
+            document.getElementById('viajeFechaIn').value = hoyIso;
+            document.getElementById('viajeFechaFin').value = hoyIso;
+            document.getElementById('tallerFechaIn').value = hoyIso;
+            document.getElementById('tallerFechaFin').value = hoyIso;
+            
+            const cache = localStorage.getItem('cochesDataCache');
+            if (cache) { 
+                procesarDatos(JSON.parse(cache)); 
+                cargarDatos(true); 
+            } else { 
+                cargarDatos(true); 
+            }
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if(document.visibilityState === 'visible') {
+                cargarDatos(false); 
+            }
+        });
+
+        function cargarDatos(mostrarLoader = false) {
+            const floatLoader = document.getElementById('floating-loader');
+            
+            if (mostrarLoader) {
+                floatLoader.classList.remove('hidden');
+                setTimeout(() => floatLoader.classList.remove('opacity-0'), 10);
+            }
+            
+            fetch(SCRIPT_URL).then(r => r.json()).then(data => {
+                localStorage.setItem('cochesDataCache', JSON.stringify(data));
+                procesarDatos(data);
+            }).catch(e => console.log("Modo offline")).finally(() => {
+                if (mostrarLoader) {
+                    floatLoader.classList.add('opacity-0');
+                    setTimeout(() => floatLoader.classList.add('hidden'), 300);
+                }
+            });
+        }
+
+        function procesarDatos(data) {
+            reservasActivas.clear();
+            let arr = data.reservas ? data.reservas : data;
+            arr.forEach(res => {
+                reservasActivas.set(`${res.coche}_${res.fecha}_${res.turno}`, { 
+                    nombre: res.nombre, taller: res.taller, observacion: res.observacion 
+                });
+            });
+            if (data.infoCoches) infoCochesGlobal = data.infoCoches;
+            renderApp();
+        }
+
+        function irAHoy() {
+            const todayStr = new Date().toDateString();
+            const todayIndex = arrayFechas.findIndex(d => d.toDateString() === todayStr);
+            if(todayIndex !== -1) {
+                const diaEl = document.getElementById(`dia-${todayIndex}`);
+                if (diaEl) document.getElementById('scroll-container').scrollTo({ left: diaEl.offsetLeft, behavior: 'smooth' });
+            }
+        }
+
+        function renderApp() {
+            const todayStr = new Date().toDateString();
+            
+            let fixedHtml = "";
+            coches.forEach(coche => {
+                fixedHtml += `
+                    <div class="flex items-center justify-center py-[5px] h-[4.7rem]">
+                        <button onclick="mostrarDatosCoche('${coche.id}', '${coche.alias}')" class="w-[42px] h-[4.2rem] rounded-xl border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center text-[8px] font-bold text-gray-600 text-center leading-tight gap-[2px] transition active:bg-gray-100">
+                            <span>${coche.alias}</span>
+                            <i class="far fa-file-alt text-teal-600 text-[11px]"></i>
+                        </button>
+                    </div>`;
+            });
+            document.getElementById('fixed-cars-col').innerHTML = fixedHtml;
+
+            let gridHtml = "";
+            arrayFechas.forEach((fechaObj, index) => {
+                const isToday = fechaObj.toDateString() === todayStr;
+                const fechaStr = new Date(fechaObj.getTime() - (fechaObj.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                const bgClass = isToday ? 'bg-teal-50 border-x border-teal-200 shadow-sm z-10' : 'bg-transparent';
+                const textClass = isToday ? 'text-teal-800' : 'text-gray-500';
+                
+                let colHtml = `
+                <div class="day-col ${bgClass}" id="dia-${index}">
+                    <div class="h-[52px] w-full flex flex-col items-center justify-center border-b border-gray-100">
+                        <span class="text-[9px] ${textClass} font-bold tracking-wider">${diasNombres[fechaObj.getDay()]}</span>
+                        <span class="text-[13px] font-bold ${textClass}">${fechaObj.getDate()}</span>
+                    </div>`;
+                
+                coches.forEach(coche => {
+                    const idM = `${coche.id}_${fechaStr}_Mañana`;
+                    const idT = `${coche.id}_${fechaStr}_Tarde`;
+                    const resM = reservasActivas.get(idM);
+                    const resT = reservasActivas.get(idT);
+                    
+                    const clickM = `abrirReservaNormal('${coche.id}', '${coche.alias.replace('<br>',' ')}', '${fechaStr}', 'Mañana', '${fechaObj.toLocaleDateString()}')`;
+                    const clickT = `abrirReservaNormal('${coche.id}', '${coche.alias.replace('<br>',' ')}', '${fechaStr}', 'Tarde', '${fechaObj.toLocaleDateString()}')`;
+
+                    const isResM = resM && resM.nombre !== "";
+                    const isResT = resT && resT.nombre !== "";
+                    const isTallerM = resM && resM.taller;
+                    const isTallerT = resT && resT.taller;
+
+                    let styleM = "rounded-t-full ";
+                    let styleT = "rounded-b-full ";
+
+                    // COLOR GRANATE Y BORDE AMARILLO-ANARANJADO PARA TALLER
+                    if (isResM) {
+                        styleM += "bg-[#901a1e] text-white shadow-inner ";
+                        if (isTallerM) styleM += "border-[2.5px] border-[#f59e0b] border-b-0 "; // Taller = Amarillo-Anaranjado
+                        else styleM += "border-2 border-[#2b0000] border-b-0 "; // Normal = Casi negro
+                    } else {
+                        styleM += "bg-white ";
+                        if (isTallerM) styleM += "text-[#b45309] border-[2.5px] border-[#f59e0b] border-b-0 shadow-inner "; // Taller libre
+                        else styleM += "text-teal-700 border-[1.5px] border-teal-500 border-b-0 ";
+                    }
+
+                    if (isResT) {
+                        styleT += "bg-[#901a1e] text-white shadow-inner ";
+                        if (isTallerT) styleT += "border-[2.5px] border-[#f59e0b] border-t-0 ";
+                        else styleT += "border-2 border-[#2b0000] border-t-0 ";
+                    } else {
+                        styleT += "bg-white ";
+                        if (isTallerT) styleT += "text-[#b45309] border-[2.5px] border-[#f59e0b] border-t-0 shadow-inner ";
+                        else styleT += "text-teal-700 border-[1.5px] border-teal-500 border-t-0 ";
+                    }
+
+                    let midLine = `<div class="h-[1px] bg-teal-100 mx-1"></div>`;
+                    if (isTallerM && isTallerT) {
+                        midLine = `<div class="h-[2px] bg-[#f59e0b] mx-1"></div>`; // Línea de separación taller visible
+                    } else if (isResM && isResT) {
+                        midLine = `<div class="h-[1px] bg-[#2b0000]"></div>`; // Línea casi negra reserva
+                    }
+
+                    colHtml += `
+                        <div class="h-[4.7rem] w-full max-w-[34px] flex flex-col py-[5px]">
+                            <button class="slot-btn flex-1 flex items-center justify-center font-bold text-[10px] transition-colors ${styleM}" onclick="${clickM}">M</button>
+                            ${midLine}
+                            <button class="slot-btn flex-1 flex items-center justify-center font-bold text-[10px] transition-colors ${styleT}" onclick="${clickT}">T</button>
+                        </div>`;
+                });
+                
+                colHtml += `</div>`;
+                gridHtml += colHtml;
+            });
+            document.getElementById('calendar-grid').innerHTML = gridHtml;
+            
+            if(!window.haCentradoHoy) {
+                setTimeout(() => {
+                    irAHoy();
+                    window.haCentradoHoy = true;
+                }, 100);
+            }
+        }
+
+        function scrollSieteDias(direccion) { document.getElementById('scroll-container').scrollBy({ left: direccion * 42 * 7, behavior: 'smooth' }); }
+        function cerrarModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        let reservaPendiente = null;
+        function abrirReservaNormal(cocheId, cocheAlias, fechaISO, turno, fechaTexto) {
+            reservaPendiente = { coche: cocheId, fecha: fechaISO, turno, id: `${cocheId}_${fechaISO}_${turno}` };
+            document.getElementById('modalCoche').innerHTML = cocheAlias;
+            document.getElementById('modalFecha').innerText = fechaTexto;
+            document.getElementById('modalTurno').innerText = turno;
+            
+            let resObj = reservasActivas.get(reservaPendiente.id);
+            const input = document.getElementById('inputNombre');
+            const avisoBox = document.getElementById('avisoTallerBox');
+            
+            if (resObj && resObj.taller) {
+                avisoBox.classList.remove('hidden');
+                document.getElementById('avisoTallerText').innerText = resObj.observacion || "En mantenimiento.";
+            } else { avisoBox.classList.add('hidden'); }
+            
+            if (resObj && resObj.nombre !== "") {
+                document.getElementById('modalTitle').innerText = "Editar Reserva";
+                document.getElementById('modalTitle').className = "text-xl font-bold text-[#c2410c]";
+                input.value = resObj.nombre;
+            } else {
+                document.getElementById('modalTitle').innerText = "Nueva Reserva";
+                document.getElementById('modalTitle').className = "text-xl font-bold text-teal-800";
+                input.value = localStorage.getItem('ultimoNombreCoches') || '';
+            }
+            document.getElementById('reservaModal').classList.remove('hidden');
+        }
+
+        function enviarReservaNormal(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('inputNombre').value.trim();
+            if (nombre !== '') localStorage.setItem('ultimoNombreCoches', nombre); 
+            
+            let actual = reservasActivas.get(reservaPendiente.id) || { taller: false, observacion: "" };
+            actual.nombre = nombre;
+            reservasActivas.set(reservaPendiente.id, actual);
+            renderApp(); 
+            cerrarModal('reservaModal'); 
+
+            fetch(SCRIPT_URL, { 
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify([{ fecha: reservaPendiente.fecha, nombre: nombre, coche: reservaPendiente.coche, turno: reservaPendiente.turno }]) 
+            }).then(() => { cargarDatos(false); });
+        }
+
+        function formatPhone(text) {
+            const phoneRegex = /\b(?:(?:\+|00)34[\s.-]?)?[6789](?:[\s.-]?\d){8}\b/g;
+            return text.replace(phoneRegex, match => `<a href="tel:${match.replace(/\s+/g, '')}" class="text-blue-600 underline font-bold" onclick="event.stopPropagation()">${match}</a>`);
+        }
+
+        function mostrarDatosCoche(cocheId, cocheAlias) {
+            currentCocheIdForTaller = cocheId; 
+            document.getElementById('infoCocheTitle').innerHTML = cocheAlias.replace('<br>', ' ');
+            isEditModeInfo = false; 
+            renderInfoCocheContent();
+            document.getElementById('infoCocheModal').classList.remove('hidden');
+        }
+
+        function toggleEditCoche() {
+            isEditModeInfo = !isEditModeInfo;
+            renderInfoCocheContent();
+        }
+
+        function renderInfoCocheContent() {
+            let targetKey = Object.keys(infoCochesGlobal).find(k => k.toLowerCase().includes(currentCocheIdForTaller.toLowerCase()));
+            let htmlContent = `<p class="text-center text-gray-500 my-4">Sin datos en Drive.</p>`;
+            
+            if (targetKey && infoCochesGlobal[targetKey]) {
+                if (isEditModeInfo) {
+                    let inputs = infoCochesGlobal[targetKey].map((item, index) => `
+                        <div class="flex flex-col border-b border-gray-200 border-opacity-60 py-2 last:border-0">
+                            <label class="text-[11px] font-bold text-teal-700 uppercase tracking-wide mb-1">${item.label}</label>
+                            <input type="text" id="editCocheVal_${index}" value="${item.value || ''}" data-label="${item.label}" class="w-full border border-gray-300 p-2 rounded text-sm focus:border-teal-500 focus:outline-none">
+                        </div>
+                    `).join('');
+                    htmlContent = `
+                        <form onsubmit="guardarDatosCoche(event)">
+                            <div class="flex flex-col mb-3">${inputs}</div>
+                            <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition shadow-md">Guardar Cambios</button>
+                        </form>`;
+                    document.getElementById('infoCocheActions').classList.add('hidden');
+                } else {
+                    let lista = infoCochesGlobal[targetKey].map(item => `
+                        <div class="flex justify-between border-b border-gray-200 border-opacity-60 py-2 last:border-0 items-center">
+                            <span class="text-[11px] font-bold text-teal-700 uppercase tracking-wide w-5/12 pr-1">${item.label}</span>
+                            <span class="text-[12px] font-medium text-gray-700 w-7/12 text-right break-words">${formatPhone(item.value || '-')}</span>
+                        </div>
+                    `).join('');
+                    htmlContent = `<div class="flex flex-col">${lista}</div>`;
+                    document.getElementById('infoCocheActions').classList.remove('hidden');
+                }
+            }
+            document.getElementById('infoCocheContent').innerHTML = htmlContent;
+            
+            const gearBtn = document.getElementById('btnConfigCoche');
+            if(isEditModeInfo) { gearBtn.classList.add('text-teal-600'); gearBtn.classList.remove('text-gray-400'); }
+            else { gearBtn.classList.add('text-gray-400'); gearBtn.classList.remove('text-teal-600'); }
+        }
+
+        function guardarDatosCoche(e) {
+            e.preventDefault();
+            let targetKey = Object.keys(infoCochesGlobal).find(k => k.toLowerCase().includes(currentCocheIdForTaller.toLowerCase()));
+            let datosNuevos = [];
+            
+            let inputs = document.querySelectorAll('input[id^="editCocheVal_"]');
+            inputs.forEach(inp => { datosNuevos.push({ label: inp.getAttribute('data-label'), value: inp.value }); });
+            
+            infoCochesGlobal[targetKey] = datosNuevos; 
+            isEditModeInfo = false;
+            renderInfoCocheContent(); 
+
+            const payload = { action: "update_coche", coche: currentCocheIdForTaller, datos: datosNuevos };
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            .then(() => { cargarDatos(false); });
+        }
+
+        function abrirTallerModal() {
+            cerrarModal('infoCocheModal');
+            document.getElementById('tallerCocheName').innerText = currentCocheIdForTaller;
+            
+            const hoyIso = new Date().toISOString().split('T')[0];
+            let slotsTaller = [];
+            arrayFechas.forEach(d => {
+                let fStr = d.toISOString().split('T')[0];
+                if (fStr >= hoyIso) {
+                    let rM = reservasActivas.get(`${currentCocheIdForTaller}_${fStr}_Mañana`);
+                    let rT = reservasActivas.get(`${currentCocheIdForTaller}_${fStr}_Tarde`);
+                    if(rM && rM.taller) slotsTaller.push({ fecha: fStr, turno: 'Mañana', obs: rM.observacion });
+                    if(rT && rT.taller) slotsTaller.push({ fecha: fStr, turno: 'Tarde', obs: rT.observacion });
                 }
             });
             
-          }, 1200);
-        } else {
-          txtIcono.textContent = "Error al guardar";
-          txtSub.textContent = json.error || "Inténtalo de nuevo";
-          btn.disabled = false;
-        }
-      } catch (err) {
-        console.error(err);
-        txtIcono.textContent = "Error de conexión";
-        txtSub.textContent = "Revisa tu conexión a internet";
-        btn.disabled = false;
-      }
-    }
-
-    // =========================================================================
-    // GUARDADO PRINCIPAL
-    // =========================================================================
-    async function guardarCambiosPendientes() {
-      const keys = Object.keys(cambiosPendientes);
-      if (keys.length === 0) return;
-
-      const btnGuardarSup = document.querySelector("#contenedor-btn-guardar-sup button");
-      const btnTxtSup = document.getElementById("btn-guardar-txt-sup");
-      const syncStatus = document.getElementById("sync-status");
-      const btnIcono = document.getElementById("btn-guardar-icono");
-
-      btnGuardarSup.disabled = true;
-      btnGuardarSup.className = "w-full bg-gray-100 text-gray-500 font-bold py-3.5 px-5 rounded-xl flex items-center justify-between text-sm md:text-base transition-colors cursor-wait";
-      btnIcono.textContent = "⏳";
-      btnTxtSup.textContent = "Guardando en Drive...";
-      syncStatus.textContent = "guardando cambios...";
-      syncStatus.className = "text-[11px] text-gray-400 font-semibold tracking-tight";
-
-      let cambiosPorPersona = {};
-      let obsPorFecha = {};
-
-      keys.forEach(k => {
-        if (k.startsWith("OBS_ARRAY|")) {
-           const fecha = k.split('|')[1];
-           obsPorFecha[fecha] = cambiosPendientes[k];
-        } else {
-           const [person, fecha, meal] = k.split('|');
-           if (!cambiosPorPersona[person]) cambiosPorPersona[person] = [];
-           cambiosPorPersona[person].push(`${fecha}|meal|${cambiosPendientes[k]}`);
-           cambiosPorPersona[person].push(`${fecha}|${meal}|${cambiosPendientes[k]}`);
-        }
-      });
-
-      try {
-        for (const person in cambiosPorPersona) {
-          const cellsStr = cambiosPorPersona[person].join(';');
-          await fetch(SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ mode: "cells", person: person, cells: cellsStr })
-          });
-        }
-
-        for (const fecha in obsPorFecha) {
-          const notas = obsPorFecha[fecha];
-          await fetch(SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ mode: "observaciones", date: fecha, values: notas })
-          });
-        }
-
-        keys.forEach(k => {
-          if (!k.startsWith("OBS_ARRAY|")) {
-            const [person, fecha, meal] = k.split('|');
-            const colIndex = encontrarColumnaFechaExacta(fecha);
-            if (colIndex !== -1) {
-              const fila = rowsSheet.find(r => String(r[1] || "").trim() === person);
-              if (fila) {
-                const offset = meal === 'desayuno' ? 0 : (meal === 'almuerzo' ? 1 : 2);
-                fila[colIndex + offset] = cambiosPendientes[k];
-              }
+            if (slotsTaller.length > 0) {
+                document.getElementById('tallerMainTitleText').innerHTML = `<i class="fas fa-tools mr-2"></i>Modificar Taller:`;
+                document.getElementById('tallerFechaIn').value = slotsTaller[0].fecha; document.getElementById('tallerTurnoIn').value = slotsTaller[0].turno;
+                document.getElementById('tallerFechaFin').value = slotsTaller[slotsTaller.length-1].fecha; document.getElementById('tallerTurnoFin').value = slotsTaller[slotsTaller.length-1].turno;
+                document.getElementById('tallerObs').value = slotsTaller[0].obs || "";
+                document.getElementById('btnTaller').innerText = "Actualizar Taller"; document.getElementById('btnBorrarTaller').classList.remove('hidden');
+            } else {
+                document.getElementById('tallerMainTitleText').innerHTML = `<i class="fas fa-tools mr-2"></i>Nuevo Taller:`;
+                document.getElementById('tallerFechaIn').value = hoyIso; document.getElementById('tallerFechaFin').value = hoyIso;
+                document.getElementById('tallerObs').value = "";
+                document.getElementById('btnTaller').innerText = "Aplicar Taller"; document.getElementById('btnBorrarTaller').classList.add('hidden');
             }
-          }
-        });
-
-        for (const fecha in obsPorFecha) {
-           const notas = obsPorFecha[fecha];
-           const colIndex = encontrarColumnaFechaExacta(fecha);
-           if (colIndex !== -1) {
-             let obsRowIndex = -1;
-             for (let r = 0; r < rowsSheet.length; r++) {
-               if (String(rowsSheet[r][colIndex] || "").trim().toLowerCase().includes("observaciones")) {
-                 obsRowIndex = r; break;
-               }
-             }
-             if (obsRowIndex !== -1) {
-               let currentR = obsRowIndex + 1;
-               for (let i = 0; i < notas.length; i++) {
-                 if (currentR >= rowsSheet.length) rowsSheet.push(new Array(rowsSheet[0].length).fill(""));
-                 rowsSheet[currentR][colIndex] = notas[i];
-                 currentR++;
-               }
-               for (let i = 0; i < 5; i++) {
-                 if (currentR < rowsSheet.length) rowsSheet[currentR][colIndex] = "";
-                 currentR++;
-               }
-             }
-           }
+            document.getElementById('tallerModal').classList.remove('hidden');
         }
-        
-        localStorage.setItem("comensales_cache_rows", JSON.stringify(rowsSheet));
-        cambiosPendientes = {};
-        
-        btnGuardarSup.disabled = false;
-        btnGuardarSup.className = "w-full bg-forest text-white font-bold py-3.5 px-5 rounded-xl flex items-center justify-between text-sm md:text-base shadow-md active:scale-95 transition-transform animate-pulse";
-        btnIcono.textContent = "💾";
-        syncStatus.className = "text-xs text-white/70 font-medium tracking-tight";
-        
-        actualizarEstadoBotonGuardarSup();
-        renderizarVista();
 
-        // Refresco de datos con cache-buster tras guardar pendientes
-        const timestamp = new Date().getTime();
-        fetch(SCRIPT_URL + "?mode=getData&t=" + timestamp, { cache: "no-store" })
-           .then(r => r.json())
-           .then(j => {
-          if (j.ok) {
-            headersSheet = j.headers;
-            rowsSheet = j.rows;
-            localStorage.setItem("comensales_cache_headers", JSON.stringify(headersSheet));
-            localStorage.setItem("comensales_cache_rows", JSON.stringify(rowsSheet));
-            renderizarVista();
-          }
-        });
+        function enviarTaller(e) {
+            e.preventDefault();
+            const obs = document.getElementById('tallerObs').value;
+            const fIn = document.getElementById('tallerFechaIn').value; const tIn = document.getElementById('tallerTurnoIn').value;
+            const fFin = document.getElementById('tallerFechaFin').value; const tFin = document.getElementById('tallerTurnoFin').value;
+            const hoyIso = new Date().toISOString().split('T')[0];
 
-      } catch (err) {
-        console.error("Error al sincronizar con Drive:", err);
-        btnIcono.textContent = "⚠️";
-        btnTxtSup.textContent = "Error de conexión";
-        syncStatus.textContent = "Reintentar";
-        syncStatus.className = "text-xs text-red-500 font-bold";
-        btnGuardarSup.disabled = false;
-        
-        setTimeout(() => {
-           btnGuardarSup.className = "w-full bg-forest text-white font-bold py-3.5 px-5 rounded-xl flex items-center justify-between text-sm md:text-base shadow-md active:scale-95 transition-transform animate-pulse";
-           btnIcono.textContent = "💾";
-           syncStatus.className = "text-xs text-white/70 font-medium tracking-tight";
-           actualizarEstadoBotonGuardarSup();
-        }, 4000);
-      }
-    }
-
-    cargarDatos();
-  </script>
-
-  <!-- ================= REGISTRO DE SERVICE WORKER CON AUTO-UPDATE ================= -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').then((registration) => {
-          
-          registration.update();
-
-          registration.onupdatefound = () => {
-            const installingWorker = registration.installing;
-            if (installingWorker) {
-              installingWorker.onstatechange = () => {
-                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('Nueva versión encontrada. Actualizando automáticamente...');
-                  window.location.reload();
+            arrayFechas.forEach(d => {
+                let fStr = d.toISOString().split('T')[0];
+                if (fStr >= hoyIso) {
+                    ['Mañana', 'Tarde'].forEach(t => {
+                        let res = reservasActivas.get(`${currentCocheIdForTaller}_${fStr}_${t}`);
+                        if (res) { res.taller = false; res.observacion = ""; }
+                    });
                 }
-              };
+            });
+            let startD = new Date(fIn); let endD = new Date(fFin);
+            for(let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+                let fStr = d.toISOString().split('T')[0];
+                let turnos = [];
+                if (d.getTime() === startD.getTime() && d.getTime() === endD.getTime()) {
+                    if (tIn === "Mañana" && tFin === "Tarde") turnos = ["Mañana", "Tarde"];
+                    else if (tIn === "Tarde" && tFin === "Mañana") {} 
+                    else turnos = [tIn];
+                } else if (d.getTime() === startD.getTime()) { turnos = (tIn === "Mañana") ? ["Mañana", "Tarde"] : ["Tarde"];
+                } else if (d.getTime() === endD.getTime()) { turnos = (tFin === "Mañana") ? ["Mañana"] : ["Mañana", "Tarde"];
+                } else { turnos = ["Mañana", "Tarde"]; }
+                
+                turnos.forEach(t => {
+                    let key = `${currentCocheIdForTaller}_${fStr}_${t}`;
+                    let res = reservasActivas.get(key) || { nombre: "", taller: false, observacion: "" };
+                    res.taller = true; res.observacion = obs;
+                    reservasActivas.set(key, res);
+                });
             }
-          };
-        }).catch((err) => {
-          console.warn('Error al registrar Service Worker:', err);
-        });
+            
+            renderApp();
+            cerrarModal('tallerModal');
 
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
-            refreshing = true;
-            window.location.reload();
-          }
-        });
-      });
-    }
-  </script>
+            const payload = {
+                action: "taller", coche: currentCocheIdForTaller, observacion: obs, fechaHoy: hoyIso,
+                inicio: { fecha: fIn, turno: tIn }, fin: { fecha: fFin, turno: tFin }
+            };
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            .then(() => { cargarDatos(false); });
+        }
+
+        function borrarTaller() {
+            const hoyIso = new Date().toISOString().split('T')[0];
+            
+            arrayFechas.forEach(d => {
+                let fStr = d.toISOString().split('T')[0];
+                if (fStr >= hoyIso) {
+                    ['Mañana', 'Tarde'].forEach(t => {
+                        let res = reservasActivas.get(`${currentCocheIdForTaller}_${fStr}_${t}`);
+                        if (res) { res.taller = false; res.observacion = ""; }
+                    });
+                }
+            });
+            renderApp();
+            cerrarModal('tallerModal');
+
+            const payload = { action: "borrar_taller", coche: currentCocheIdForTaller, fechaHoy: hoyIso };
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            .then(() => { cargarDatos(false); });
+        }
+
+        function abrirViajeModal() { document.getElementById('viajeModal').classList.remove('hidden'); }
+        
+        function enviarViaje(e) {
+            e.preventDefault();
+            const fIn = document.getElementById('viajeFechaIn').value; const tIn = document.getElementById('viajeTurnoIn').value;
+            const fFin = document.getElementById('viajeFechaFin').value; const tFin = document.getElementById('viajeTurnoFin').value;
+            const coche = document.getElementById('viajeCoche').value; const nombre = document.getElementById('viajeNombre').value;
+            
+            let startD = new Date(fIn); let endD = new Date(fFin);
+            let payloadArr = [];
+            
+            for(let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+                let fStr = d.toISOString().split('T')[0];
+                if (d.getTime() === startD.getTime() && d.getTime() === endD.getTime()) {
+                    if (tIn === "Tarde" && tFin === "Mañana") { } 
+                    else if (tIn === "Mañana" && tFin === "Tarde") { payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre}); }
+                    else { payloadArr.push({fecha:fStr, turno:tIn, coche, nombre}); }
+                } else if (d.getTime() === startD.getTime()) {
+                    if (tIn === "Mañana") { payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre}); }
+                    else { payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre}); }
+                } else if (d.getTime() === endD.getTime()) {
+                    if (tFin === "Mañana") { payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); }
+                    else { payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre}); }
+                } else {
+                    payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre});
+                }
+            }
+
+            payloadArr.forEach(p => {
+                let key = `${p.coche}_${p.fecha}_${p.turno}`;
+                let actual = reservasActivas.get(key) || { taller: false, observacion: "" };
+                actual.nombre = p.nombre;
+                reservasActivas.set(key, actual);
+            });
+            renderApp();
+            cerrarModal('viajeModal');
+            document.getElementById('viajeNombre').value = '';
+
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payloadArr) })
+            .then(() => { cargarDatos(false); });
+        }
+
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
+    </script>
 </body>
 </html>
