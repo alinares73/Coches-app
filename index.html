@@ -333,6 +333,21 @@
     let ausenciaFinalMeal = "cena";
     let focoAusencia = "inicio";
 
+    // MOTOR BLINDADO DE ESTADOS
+    function interpretarEstado(val) {
+      if (val === undefined || val === null) return "si";
+      let v = String(val).toLowerCase()
+               .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+               .replace(/\s+/g, ""); // Destruye CUALQUIER espacio
+               
+      if (v === "" || v === "si" || v === "s") return "si";
+      if (v.includes("tarde")) return "tarde";
+      if (v.includes("temp")) return "temp";
+      if (v.includes("bolsa")) return "bolsa";
+      if (v.includes("no")) return "no";
+      return "no";
+    }
+
     async function cargarDatos() {
       const datosCache = localStorage.getItem("comensales_cache_rows");
       const headersCache = localStorage.getItem("comensales_cache_headers");
@@ -344,7 +359,9 @@
       }
 
       try {
-        const res = await fetch(SCRIPT_URL + "?mode=getData");
+        // ROMPE-CACHÉS para forzar la descarga siempre desde Drive
+        const timestamp = new Date().getTime();
+        const res = await fetch(SCRIPT_URL + "?mode=getData&t=" + timestamp, { cache: "no-store" });
         const json = await res.json();
         if (json.ok) {
           headersSheet = json.headers;
@@ -453,7 +470,8 @@
       const btnHoy = document.querySelector("header button");
       btnHoy.innerText = "↻..."; 
       
-      fetch(SCRIPT_URL + "?mode=getData")
+      const timestamp = new Date().getTime();
+      fetch(SCRIPT_URL + "?mode=getData&t=" + timestamp, { cache: "no-store" })
         .then(res => res.json())
         .then(json => {
           if (json.ok) {
@@ -706,29 +724,6 @@
     }
 
     // =========================================================================
-    // NUEVO MOTOR BLINDADO DE INTERPRETACIÓN DE ESTADOS
-    // =========================================================================
-    function interpretarEstado(val) {
-      if (val === undefined || val === null) return "si"; // Si no hay nada, por defecto es Sí.
-      
-      // 1. Lo pasamos a string y a minúsculas
-      // 2. normalize("NFD").replace(...) quita los acentos (ej. sí -> si)
-      // 3. replace(/\s+/g, "") destruye todos los espacios posibles, normales o de Excel
-      let v = String(val).toLowerCase()
-               .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-               .replace(/\s+/g, ""); 
-               
-      if (v === "" || v === "si" || v === "s") return "si";
-      if (v.includes("tarde")) return "tarde";
-      if (v.includes("temp")) return "temp";
-      if (v.includes("bolsa")) return "bolsa";
-      if (v.includes("no")) return "no";
-      
-      // Si escriben una locura irreconocible, por precaución no contamos comida extra
-      return "no";
-    }
-
-    // =========================================================================
     // VISUALIZACIÓN PRINCIPAL Y DESGLOSES
     // =========================================================================
     function seleccionarServicioDetalle(servicio) {
@@ -850,7 +845,6 @@
         const colF = encontrarColumnaFechaExacta(fechaIsoSeleccionada);
         if (colF !== -1) {
           
-          // USO DEL NUEVO MOTOR BLINDADO
           const valDReal = cambiosPendientes[`${pName}|${fechaIsoSeleccionada}|desayuno`];
           const valAReal = cambiosPendientes[`${pName}|${fechaIsoSeleccionada}|almuerzo`];
           const valCReal = cambiosPendientes[`${pName}|${fechaIsoSeleccionada}|cena`];
@@ -859,25 +853,21 @@
           const aEstado = interpretarEstado(valAReal !== undefined ? valAReal : r[colF + 1]);
           const cEstado = interpretarEstado(valCReal !== undefined ? valCReal : r[colF + 2]);
 
-          // Conteo Desayuno
           if (dEstado === "si") cDesay++;
           else if (dEstado === "tarde") espDesay.tarde++;
           else if (dEstado === "temp") espDesay.temp++;
           else if (dEstado === "bolsa") espDesay.bolsa++;
 
-          // Conteo Almuerzo
           if (aEstado === "si") cAlm++;
           else if (aEstado === "tarde") espAlm.tarde++;
           else if (aEstado === "temp") espAlm.temp++;
           else if (aEstado === "bolsa") espAlm.bolsa++;
 
-          // Conteo Cena
           if (cEstado === "si") cCena++;
           else if (cEstado === "tarde") espCena.tarde++;
           else if (cEstado === "temp") espCena.temp++;
           else if (cEstado === "bolsa") espCena.bolsa++;
 
-          // Lógica de las listas visuales inferiores
           const offset = servicioDetalleActivo === 'desayuno' ? 0 : (servicioDetalleActivo === 'almuerzo' ? 1 : 2);
           const valPendiente = cambiosPendientes[`${pName}|${fechaIsoSeleccionada}|${servicioDetalleActivo}`];
           const estadoCelda = interpretarEstado(valPendiente !== undefined ? valPendiente : r[colF + offset]);
@@ -964,7 +954,7 @@
       if (estado === "tarde") return "Tarde";
       if (estado === "temp") return "Temprano";
       if (estado === "bolsa") return "Bolsa";
-      return val; // Por si hay texto libre (ej: "Llega a las 15:00")
+      return val; 
     }
 
     // =========================================================================
@@ -1175,14 +1165,18 @@
           setTimeout(() => {
             cerrarPantallaAusencias();
             
-            fetch(SCRIPT_URL + "?mode=getData").then(r => r.json()).then(j => {
-              if (j.ok) {
-                headersSheet = j.headers;
-                rowsSheet = j.rows;
-                localStorage.setItem("comensales_cache_headers", JSON.stringify(headersSheet));
-                localStorage.setItem("comensales_cache_rows", JSON.stringify(rowsSheet));
-                renderizarVista();
-              }
+            // Refresco de datos con cache-buster al guardar rango
+            const timestamp = new Date().getTime();
+            fetch(SCRIPT_URL + "?mode=getData&t=" + timestamp, { cache: "no-store" })
+              .then(r => r.json())
+              .then(j => {
+                if (j.ok) {
+                  headersSheet = j.headers;
+                  rowsSheet = j.rows;
+                  localStorage.setItem("comensales_cache_headers", JSON.stringify(headersSheet));
+                  localStorage.setItem("comensales_cache_rows", JSON.stringify(rowsSheet));
+                  renderizarVista();
+                }
             });
             
           }, 1200);
@@ -1302,12 +1296,17 @@
         actualizarEstadoBotonGuardarSup();
         renderizarVista();
 
-        fetch(SCRIPT_URL + "?mode=getData").then(r => r.json()).then(j => {
+        // Refresco de datos con cache-buster tras guardar pendientes
+        const timestamp = new Date().getTime();
+        fetch(SCRIPT_URL + "?mode=getData&t=" + timestamp, { cache: "no-store" })
+           .then(r => r.json())
+           .then(j => {
           if (j.ok) {
             headersSheet = j.headers;
             rowsSheet = j.rows;
             localStorage.setItem("comensales_cache_headers", JSON.stringify(headersSheet));
             localStorage.setItem("comensales_cache_rows", JSON.stringify(rowsSheet));
+            renderizarVista();
           }
         });
 
@@ -1337,10 +1336,8 @@
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').then((registration) => {
           
-          // Comprobar activamente si hay una nueva versión en GitHub
           registration.update();
 
-          // Si detecta un nuevo Service Worker esperando, forzar recarga
           registration.onupdatefound = () => {
             const installingWorker = registration.installing;
             if (installingWorker) {
@@ -1356,7 +1353,6 @@
           console.warn('Error al registrar Service Worker:', err);
         });
 
-        // Escuchar si el nuevo Service Worker ha tomado el control
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (!refreshing) {
