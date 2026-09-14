@@ -41,12 +41,10 @@
   <!-- ================= PANTALLA PRINCIPAL MAIN ================= -->
   <div id="pantalla-principal">
     
-    <!-- Cabecera principal con Imagen Banner Edge-to-Edge Recta y botón HOY flotante bajado -->
+    <!-- Cabecera principal con Imagen Banner Edge-to-Edge Recta y botón HOY flotante -->
     <header class="relative -mx-4 -mt-4 sm:-mx-6 sm:-mt-6 md:-mx-8 md:-mt-8 flex flex-col">
-      <!-- La clase "block" y el contenedor flex eliminan los márgenes fantasma debajo de la imagen -->
       <img src="banner.jpg" alt="Comensales Ciudadela" class="w-full h-[140px] md:h-[180px] object-cover block">
       
-      <!-- Botón HOY sobre la imagen (bajado a top-12 y con transparencia efecto cristal) -->
       <div class="absolute top-12 right-4 sm:top-14 sm:right-6 md:top-16 md:right-8 z-10">
         <button onclick="irAlDiaHoy()" class="bg-[#F8E2E0]/70 backdrop-blur-md hover:bg-[#F2D1CE]/90 text-[#8C4340] font-extrabold text-xs md:text-sm px-4 py-2.5 rounded-xl shadow-md active:scale-95 transition-all tracking-wider uppercase border border-white/40">
           HOY
@@ -708,6 +706,29 @@
     }
 
     // =========================================================================
+    // NUEVO MOTOR BLINDADO DE INTERPRETACIÓN DE ESTADOS
+    // =========================================================================
+    function interpretarEstado(val) {
+      if (val === undefined || val === null) return "si"; // Si no hay nada, por defecto es Sí.
+      
+      // 1. Lo pasamos a string y a minúsculas
+      // 2. normalize("NFD").replace(...) quita los acentos (ej. sí -> si)
+      // 3. replace(/\s+/g, "") destruye todos los espacios posibles, normales o de Excel
+      let v = String(val).toLowerCase()
+               .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+               .replace(/\s+/g, ""); 
+               
+      if (v === "" || v === "si" || v === "s") return "si";
+      if (v.includes("tarde")) return "tarde";
+      if (v.includes("temp")) return "temp";
+      if (v.includes("bolsa")) return "bolsa";
+      if (v.includes("no")) return "no";
+      
+      // Si escriben una locura irreconocible, por precaución no contamos comida extra
+      return "no";
+    }
+
+    // =========================================================================
     // VISUALIZACIÓN PRINCIPAL Y DESGLOSES
     // =========================================================================
     function seleccionarServicioDetalle(servicio) {
@@ -829,46 +850,46 @@
         const colF = encontrarColumnaFechaExacta(fechaIsoSeleccionada);
         if (colF !== -1) {
           
-          // LECTURA DE CELDAS A PRUEBA DE HUMANOS (Cero espacios y case-insensitive)
+          // USO DEL NUEVO MOTOR BLINDADO
           const valDReal = cambiosPendientes[`${pName}|${fechaIsoSeleccionada}|desayuno`];
           const valAReal = cambiosPendientes[`${pName}|${fechaIsoSeleccionada}|almuerzo`];
           const valCReal = cambiosPendientes[`${pName}|${fechaIsoSeleccionada}|cena`];
 
-          const dVal = String(valDReal !== undefined ? valDReal : (r[colF] || "")).toLowerCase().trim();
-          const aVal = String(valAReal !== undefined ? valAReal : (r[colF + 1] || "")).toLowerCase().trim();
-          const cVal = String(valCReal !== undefined ? valCReal : (r[colF + 2] || "")).toLowerCase().trim();
+          const dEstado = interpretarEstado(valDReal !== undefined ? valDReal : r[colF]);
+          const aEstado = interpretarEstado(valAReal !== undefined ? valAReal : r[colF + 1]);
+          const cEstado = interpretarEstado(valCReal !== undefined ? valCReal : r[colF + 2]);
 
-          // CONTEO DESAYUNO
-          if (dVal === "" || dVal === "si" || dVal === "sí") cDesay++;
-          else if (dVal.startsWith("tarde")) espDesay.tarde++;
-          else if (dVal.startsWith("temp")) espDesay.temp++;
-          else if (dVal.startsWith("bolsa")) espDesay.bolsa++;
+          // Conteo Desayuno
+          if (dEstado === "si") cDesay++;
+          else if (dEstado === "tarde") espDesay.tarde++;
+          else if (dEstado === "temp") espDesay.temp++;
+          else if (dEstado === "bolsa") espDesay.bolsa++;
 
-          // CONTEO ALMUERZO
-          if (aVal === "" || aVal === "si" || aVal === "sí") cAlm++;
-          else if (aVal.startsWith("tarde")) espAlm.tarde++;
-          else if (aVal.startsWith("temp")) espAlm.temp++;
-          else if (aVal.startsWith("bolsa")) espAlm.bolsa++;
+          // Conteo Almuerzo
+          if (aEstado === "si") cAlm++;
+          else if (aEstado === "tarde") espAlm.tarde++;
+          else if (aEstado === "temp") espAlm.temp++;
+          else if (aEstado === "bolsa") espAlm.bolsa++;
 
-          // CONTEO CENA
-          if (cVal === "" || cVal === "si" || cVal === "sí") cCena++;
-          else if (cVal.startsWith("tarde")) espCena.tarde++;
-          else if (cVal.startsWith("temp")) espCena.temp++;
-          else if (cVal.startsWith("bolsa")) espCena.bolsa++;
+          // Conteo Cena
+          if (cEstado === "si") cCena++;
+          else if (cEstado === "tarde") espCena.tarde++;
+          else if (cEstado === "temp") espCena.temp++;
+          else if (cEstado === "bolsa") espCena.bolsa++;
 
-          // LÓGICA DE LAS LISTAS INFERIORES
+          // Lógica de las listas visuales inferiores
           const offset = servicioDetalleActivo === 'desayuno' ? 0 : (servicioDetalleActivo === 'almuerzo' ? 1 : 2);
           const valPendiente = cambiosPendientes[`${pName}|${fechaIsoSeleccionada}|${servicioDetalleActivo}`];
-          const valorCelda = String(valPendiente !== undefined ? valPendiente : (r[colF + offset] || "")).toLowerCase().trim();
+          const estadoCelda = interpretarEstado(valPendiente !== undefined ? valPendiente : r[colF + offset]);
 
-          if (valorCelda === "" || valorCelda === "si" || valorCelda === "sí") {
+          if (estadoCelda === "si") {
             listSi.push(pName);
-          } else if (valorCelda.startsWith("tarde") || valorCelda.startsWith("temp") || valorCelda.startsWith("bolsa")) {
-            let etiqueta = valorCelda.startsWith('tarde') ? 'Tarde' : (valorCelda.startsWith('temp') ? 'Temprano' : 'Bolsa');
+          } else if (estadoCelda === "tarde" || estadoCelda === "temp" || estadoCelda === "bolsa") {
+            let etiqueta = estadoCelda === 'tarde' ? 'Tarde' : (estadoCelda === 'temp' ? 'Temprano' : 'Bolsa');
             listEsp.push(`${pName} (${etiqueta})`);
           } else {
             if (pName !== 'Inv 1' && pName !== 'Inv 2') {
-              listNo.push(pName); // Si no es Si, Tarde, Temp o Bolsa, asumimos que es NO.
+              listNo.push(pName);
             }
           }
         }
@@ -936,18 +957,14 @@
       return -1;
     }
 
-    // FORMATEO VISUAL PARA "TÚ ESTE DÍA" A PRUEBA DE HUMANOS
     function formatearVisual(val) {
-      if (val === undefined || val === null || val === "") return "Sí";
-      const v = String(val).toLowerCase().trim();
-      
-      if (v === "si" || v === "sí") return "Sí";
-      if (v.startsWith("no")) return "No";
-      if (v.startsWith("tarde")) return "Tarde";
-      if (v.startsWith("temp")) return "Temprano";
-      if (v.startsWith("bolsa")) return "Bolsa";
-      
-      return val; // Por si escriben algo completamente diferente (ej. un comentario)
+      const estado = interpretarEstado(val);
+      if (estado === "si") return "Sí";
+      if (estado === "no") return "No";
+      if (estado === "tarde") return "Tarde";
+      if (estado === "temp") return "Temprano";
+      if (estado === "bolsa") return "Bolsa";
+      return val; // Por si hay texto libre (ej: "Llega a las 15:00")
     }
 
     // =========================================================================
@@ -1176,7 +1193,7 @@
         }
       } catch (err) {
         console.error(err);
-        txtIcono.textContent = "Error de connection";
+        txtIcono.textContent = "Error de conexión";
         txtSub.textContent = "Revisa tu conexión a internet";
         btn.disabled = false;
       }
