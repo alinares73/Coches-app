@@ -49,7 +49,7 @@
         .car-image-btn img {
             width: 100%; height: 100%;
             object-fit: contain; mix-blend-mode: multiply;
-            transform: scale(1.35); /* Zoom para recortar márgenes blancos origen */
+            transform: scale(1.35);
         }
     </style>
 </head>
@@ -57,7 +57,7 @@
 
     <div class="w-full h-full max-w-4xl bg-white shadow-2xl relative flex flex-col overflow-hidden mx-auto">
         
-        <!-- CABECERA HERO (FIJA) -->
+        <!-- CABECERA HERO -->
         <header class="relative shrink-0 w-full z-40 bg-white shadow-sm">
             
             <button onclick="cargarDatos(true)" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/40 backdrop-blur-md hover:bg-white border border-white/50 transition active:scale-95 shadow-md z-50">
@@ -119,10 +119,12 @@
                 <h2 id="modalTitle" class="text-xl font-bold text-teal-800">Reserva</h2>
                 <button onclick="cerrarModal('reservaModal')" class="text-gray-400 text-2xl">&times;</button>
             </div>
+            
             <div id="avisoTallerBox" class="hidden mb-4 bg-amber-50 border-l-4 border-amber-700 p-3 rounded-lg text-sm text-amber-900">
                 <strong class="flex items-center mb-1"><i class="fas fa-tools mr-2 text-amber-700"></i> Observación de Taller</strong>
                 <p id="avisoTallerText" class="italic"></p>
             </div>
+
             <div class="mb-5 text-gray-700 bg-gray-50 p-3 rounded-lg text-sm flex items-center">
                 <div class="w-20 h-12 mr-3 bg-white rounded flex justify-center items-center overflow-hidden mix-blend-multiply border border-gray-200 p-1 shadow-sm">
                     <img id="modalCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-[1.35]">
@@ -135,7 +137,7 @@
             <form id="formReserva" onsubmit="enviarReservaNormal(event)">
                 <input type="text" id="inputNombre" placeholder="Tu Nombre o Horario..." class="w-full mb-2 border-2 border-gray-200 rounded-xl p-3 text-lg focus:border-teal-600 focus:outline-none">
                 <p class="text-[11px] text-gray-500 mb-4">Déjalo en blanco para eliminar la reserva.</p>
-                <button type="submit" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mb-2 flex justify-center items-center shadow-md">Guardar</button>
+                <button type="submit" id="btnConfirmarReserva" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mb-2 flex justify-center items-center shadow-md">Guardar</button>
             </form>
         </div>
     </div>
@@ -162,7 +164,7 @@
         </div>
     </div>
 
-    <!-- MODAL VIAJE (CON CALENDARIO INTERACTIVO) -->
+    <!-- MODAL VIAJE -->
     <div id="viajeModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl max-h-[95vh] flex flex-col overflow-y-auto">
             <div class="flex justify-between items-center mb-2 border-b pb-2 border-gray-100 shrink-0">
@@ -181,7 +183,7 @@
                     </div>
                 </div>
 
-                <!-- CALENDARIO VISUAL INTERACTIVO -->
+                <!-- CALENDARIO INTERACTIVO VIAJE -->
                 <div class="mt-1 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm shrink-0">
                     <div class="flex justify-between items-center bg-gray-50 px-2 py-1.5 border-b border-gray-100">
                         <button type="button" onclick="cambiarMesViaje(-1)" class="w-7 h-7 flex items-center justify-center text-teal-700 hover:bg-gray-200 rounded-full transition"><i class="fas fa-chevron-left text-xs"></i></button>
@@ -213,37 +215,52 @@
         </div>
     </div>
 
-    <!-- MODAL TALLER -->
+    <!-- MODAL TALLER CON CALENDARIO INTERACTIVO -->
     <div id="tallerModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl border-[3px] border-amber-700">
-            <div class="flex justify-between items-center mb-3 border-b pb-2 border-amber-100">
-                <h2 class="text-xl font-bold text-amber-800">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl border-[3px] border-amber-700 max-h-[95vh] flex flex-col overflow-y-auto">
+            <div class="flex justify-between items-center mb-2 border-b pb-2 border-amber-100 shrink-0">
+                <h2 class="text-lg font-bold text-amber-800">
                     <span id="tallerMainTitleText"><i class="fas fa-tools mr-2"></i>Taller:</span> 
-                    <span id="tallerCocheNameText" class="ml-1 text-lg"></span>
+                    <span id="tallerCocheNameText" class="ml-1"></span>
                 </h2>
-                <button onclick="cerrarModal('tallerModal')" class="text-gray-400 text-2xl">&times;</button>
+                <button onclick="cerrarModal('tallerModal')" class="text-gray-400 hover:text-amber-800 text-2xl">&times;</button>
             </div>
-            <form onsubmit="enviarTaller(event)">
-                <div class="mb-3">
-                    <label class="text-xs font-bold text-gray-500 uppercase">Observación</label>
-                    <textarea id="tallerObs" required class="w-full border border-gray-300 p-2 rounded-lg mt-1 focus:border-amber-500 focus:outline-none" rows="2" placeholder="Ej: Cambio de aceite..."></textarea>
+            <form onsubmit="enviarTaller(event)" class="flex flex-col gap-2">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase">Observación</label>
+                    <textarea id="tallerObs" required class="w-full border border-gray-300 p-1.5 rounded-lg mt-0.5 focus:border-amber-500 focus:outline-none text-sm" rows="1" placeholder="Ej: Cambio de aceite..."></textarea>
                 </div>
-                <div class="flex gap-2 mb-4">
+                
+                <!-- CALENDARIO VISUAL INTERACTIVO TALLER -->
+                <div class="mt-1 border border-amber-200 rounded-xl overflow-hidden bg-white shadow-sm shrink-0 mb-1">
+                    <div class="flex justify-between items-center bg-amber-50 px-2 py-1.5 border-b border-amber-100">
+                        <button type="button" onclick="cambiarMesTaller(-1)" class="w-7 h-7 flex items-center justify-center text-amber-700 hover:bg-amber-200 rounded-full transition"><i class="fas fa-chevron-left text-xs"></i></button>
+                        <span id="calMesAnnoTaller" class="text-[11px] font-bold text-amber-900 uppercase tracking-wide">...</span>
+                        <button type="button" onclick="cambiarMesTaller(1)" class="w-7 h-7 flex items-center justify-center text-amber-700 hover:bg-amber-200 rounded-full transition"><i class="fas fa-chevron-right text-xs"></i></button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-0 text-center text-[9px] font-bold text-amber-600/60 bg-amber-50 py-1 border-b border-amber-100">
+                        <div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div>
+                    </div>
+                    <div id="calGridTaller" class="grid grid-cols-7 gap-y-1 text-center text-xs p-1 pb-1.5 bg-white min-h-[140px]"></div>
+                    <div class="bg-amber-50/50 py-1.5 border-t border-amber-100 text-center text-[11px] font-bold text-amber-800 flex justify-center items-center">
+                        <i class="fas fa-tools mr-2"></i> <span id="tallerFechasVisual">--/--/----  ➡️  --/--/----</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
                     <div class="w-1/2">
-                        <label class="text-xs font-bold text-gray-500 uppercase">Inicio Espera</label>
-                        <!-- Script onchange añadido para que la fecha fin se iguale sola -->
-                        <input type="date" id="tallerFechaIn" onchange="sincronizarFechaTaller()" required class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm focus:border-amber-500 focus:outline-none">
-                        <select id="tallerTurnoIn" class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm focus:border-amber-500 focus:outline-none"><option>Mañana</option><option>Tarde</option></select>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Turno Inicio</label>
+                        <select id="tallerTurnoIn" class="w-full border border-gray-300 p-1.5 rounded-lg mt-0.5 text-sm focus:border-amber-500 focus:outline-none"><option>Mañana</option><option>Tarde</option></select>
                     </div>
                     <div class="w-1/2">
-                        <label class="text-xs font-bold text-gray-500 uppercase">Fin Espera</label>
-                        <input type="date" id="tallerFechaFin" required class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm focus:border-amber-500 focus:outline-none">
-                        <select id="tallerTurnoFin" class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm focus:border-amber-500 focus:outline-none"><option>Mañana</option><option>Tarde</option></select>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Turno Fin</label>
+                        <select id="tallerTurnoFin" class="w-full border border-gray-300 p-1.5 rounded-lg mt-0.5 text-sm focus:border-amber-500 focus:outline-none"><option>Mañana</option><option>Tarde</option></select>
                     </div>
                 </div>
-                <div class="flex flex-col gap-2">
-                    <button type="submit" id="btnTaller" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-3 rounded-xl flex items-center justify-center transition shadow-md">Aplicar Taller</button>
-                    <button type="button" id="btnBorrarTaller" onclick="borrarTaller()" class="hidden w-full bg-white border border-amber-200 text-amber-700 hover:bg-amber-50 font-bold py-3 rounded-xl transition flex items-center justify-center">
+
+                <div class="flex flex-col gap-1.5 mt-1">
+                    <button type="submit" id="btnTaller" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-2.5 rounded-xl flex items-center justify-center transition shadow-md">Aplicar Taller</button>
+                    <button type="button" id="btnBorrarTaller" onclick="borrarTaller()" class="hidden w-full bg-white border border-amber-200 text-amber-700 hover:bg-amber-50 font-bold py-2.5 rounded-xl transition flex items-center justify-center">
                         <i class="fas fa-trash-alt mr-2"></i> Quitar del Taller
                     </button>
                 </div>
@@ -269,9 +286,6 @@
         let currentCocheIdForTaller = "";
         let isEditModeInfo = false; 
 
-        // ==========================================
-        // FUNCIONES CORE PARA EVITAR BUGS DE ZONA HORARIA
-        // ==========================================
         function getLocalIsoString(dateObj) {
             const pad = n => n < 10 ? '0' + n : n;
             return dateObj.getFullYear() + '-' + pad(dateObj.getMonth() + 1) + '-' + pad(dateObj.getDate());
@@ -282,7 +296,6 @@
             const parts = dateStr.split('-');
             return new Date(parts[0], parts[1] - 1, parts[2]);
         }
-        // ==========================================
         
         let arrayFechas = [];
         let baseDate = new Date();
@@ -297,10 +310,6 @@
         window.addEventListener('DOMContentLoaded', () => {
             const selectCoche = document.getElementById('viajeCoche');
             coches.forEach(c => selectCoche.innerHTML += `<option value="${c.id}">${c.alias}</option>`);
-            
-            const hoyIso = getLocalIsoString(new Date());
-            document.getElementById('tallerFechaIn').value = hoyIso;
-            document.getElementById('tallerFechaFin').value = hoyIso;
             
             const cache = localStorage.getItem('cochesDataCache');
             if (cache) { procesarDatos(JSON.parse(cache)); cargarDatos(true); } 
@@ -656,7 +665,7 @@
 
 
         // ==========================================
-        // INFO COCHE Y TALLER
+        // INFO COCHE Y TALLER (CON CALENDARIO VISUAL)
         // ==========================================
         function formatPhone(text) {
             const phoneRegex = /\b(?:(?:\+|00)34[\s.-]?)?[6789](?:[\s.-]?\d){8}\b/g;
@@ -725,64 +734,146 @@
             fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         }
 
-        // Auto-actualiza la fecha de fin de taller si eliges una posterior
-        function sincronizarFechaTaller() {
-            const fIn = document.getElementById('tallerFechaIn').value;
-            const fFinEl = document.getElementById('tallerFechaFin');
-            if (fIn && (!fFinEl.value || fFinEl.value < fIn)) {
-                fFinEl.value = fIn;
-            }
+
+        // ==========================================
+        // CALENDARIO INTERACTIVO (TALLER)
+        // ==========================================
+        let tallerCalDate = new Date();
+        let tallerStart = null;
+        let tallerEnd = null;
+
+        function cambiarMesTaller(dir) {
+            tallerCalDate.setMonth(tallerCalDate.getMonth() + dir);
+            renderTallerCal();
         }
+
+        function selectTallerDate(dateStr) {
+            const d = parseLocalDate(dateStr);
+            if (tallerStart && tallerEnd && tallerStart.getTime() !== tallerEnd.getTime()) {
+                tallerStart = d; tallerEnd = d;
+            } else if (tallerStart && tallerEnd && tallerStart.getTime() === tallerEnd.getTime()) {
+                if (d < tallerStart) { tallerStart = d; tallerEnd = d; } 
+                else { tallerEnd = d; }
+            } else {
+                tallerStart = d; tallerEnd = d;
+            }
+            renderTallerCal();
+        }
+
+        function renderTallerCal() {
+            const y = tallerCalDate.getFullYear();
+            const m = tallerCalDate.getMonth();
+            const firstDay = new Date(y, m, 1).getDay();
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+
+            const mesNombres = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            document.getElementById('calMesAnnoTaller').innerText = `${mesNombres[m]} ${y}`;
+
+            let html = '';
+            for (let i = 0; i < startOffset; i++) { html += `<div></div>`; }
+
+            const todayStr = getLocalIsoString(new Date());
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const currentD = new Date(y, m, d);
+                const dateStr = getLocalIsoString(currentD);
+                
+                const startTs = tallerStart ? tallerStart.getTime() : null;
+                const endTs = tallerEnd ? tallerEnd.getTime() : null;
+                const ts = currentD.getTime();
+
+                let isStart = startTs === ts;
+                let isEnd = endTs === ts;
+                let inRange = startTs && endTs && ts > startTs && ts < endTs;
+                let isToday = todayStr === dateStr;
+
+                let wrapperClass = "relative flex justify-center items-center h-7";
+                let innerClass = "w-6 h-6 flex items-center justify-center rounded-full z-10 cursor-pointer text-gray-700 hover:bg-gray-200 transition-colors cal-btn";
+                
+                if (inRange) {
+                    wrapperClass += " bg-amber-100";
+                    innerClass = "w-full h-full rounded-none hover:bg-amber-200 text-amber-900 font-bold";
+                } 
+                if (isStart && isEnd) {
+                    innerClass = "w-6 h-6 bg-amber-600 text-white font-bold shadow-md";
+                } else if (isStart) {
+                    wrapperClass += " bg-gradient-to-r from-transparent to-amber-100";
+                    innerClass = "w-6 h-6 bg-amber-600 text-white font-bold shadow-md";
+                } else if (isEnd) {
+                    wrapperClass += " bg-gradient-to-r from-amber-100 to-transparent";
+                    innerClass = "w-6 h-6 bg-amber-600 text-white font-bold shadow-md";
+                } else if (!inRange && isToday) {
+                    innerClass += " border border-amber-400 font-bold text-amber-700";
+                }
+
+                html += `
+                <div class="${wrapperClass}" onclick="selectTallerDate('${dateStr}')">
+                    <div class="${innerClass}">${d}</div>
+                </div>`;
+            }
+            document.getElementById('calGridTaller').innerHTML = html;
+
+            const fmt = d => d ? `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}` : '--/--/----';
+            document.getElementById('tallerFechasVisual').innerText = `${fmt(tallerStart)}  ➡️  ${fmt(tallerEnd)}`;
+        }
+
 
         function abrirTallerModal() {
             cerrarModal('infoCocheModal');
-            try {
-                const titleEl = document.getElementById('tallerCocheNameText');
-                if(titleEl) titleEl.innerText = getAliasForCoche(currentCocheIdForTaller);
-                
-                const hoyIso = getLocalIsoString(new Date());
-                let slotsTaller = [];
-                
-                let checkD = new Date(); checkD.setHours(0,0,0,0);
-                for(let i=0; i<60; i++) {
-                    let fStr = getLocalIsoString(checkD);
-                    let rM = reservasActivas.get(`${currentCocheIdForTaller}_${fStr}_Mañana`);
-                    let rT = reservasActivas.get(`${currentCocheIdForTaller}_${fStr}_Tarde`);
-                    if(rM && rM.taller) slotsTaller.push({ fecha: fStr, turno: 'Mañana', obs: rM.observacion });
-                    if(rT && rT.taller) slotsTaller.push({ fecha: fStr, turno: 'Tarde', obs: rT.observacion });
-                    checkD.setDate(checkD.getDate() + 1);
-                }
-                
-                if (slotsTaller.length > 0) {
-                    document.getElementById('tallerMainTitleText').innerHTML = `<i class="fas fa-tools mr-2"></i>Modificar Taller:`;
-                    document.getElementById('tallerFechaIn').value = slotsTaller[0].fecha; 
-                    document.getElementById('tallerTurnoIn').value = slotsTaller[0].turno;
-                    document.getElementById('tallerFechaFin').value = slotsTaller[slotsTaller.length-1].fecha; 
-                    document.getElementById('tallerTurnoFin').value = slotsTaller[slotsTaller.length-1].turno;
-                    document.getElementById('tallerObs').value = slotsTaller[0].obs || "";
-                    document.getElementById('btnTaller').innerText = "Actualizar Taller"; 
-                    document.getElementById('btnBorrarTaller').classList.remove('hidden');
-                } else {
-                    document.getElementById('tallerMainTitleText').innerHTML = `<i class="fas fa-tools mr-2"></i>Nuevo Taller:`;
-                    document.getElementById('tallerFechaIn').value = hoyIso; 
-                    document.getElementById('tallerFechaFin').value = hoyIso;
-                    document.getElementById('tallerObs').value = "";
-                    document.getElementById('btnTaller').innerText = "Aplicar Taller"; 
-                    document.getElementById('btnBorrarTaller').classList.add('hidden');
-                }
-            } catch(e) { console.error("Protección anti-bug:", e); }
+            document.getElementById('tallerCocheNameText').innerText = getAliasForCoche(currentCocheIdForTaller);
             
-            // Garantiza que la ventana se abre siempre
+            let slotsTaller = [];
+            let checkD = new Date(); checkD.setHours(0,0,0,0);
+            for(let i=0; i<60; i++) {
+                let fStr = getLocalIsoString(checkD);
+                let rM = reservasActivas.get(`${currentCocheIdForTaller}_${fStr}_Mañana`);
+                let rT = reservasActivas.get(`${currentCocheIdForTaller}_${fStr}_Tarde`);
+                if(rM && rM.taller) slotsTaller.push({ fecha: fStr, turno: 'Mañana', obs: rM.observacion });
+                if(rT && rT.taller) slotsTaller.push({ fecha: fStr, turno: 'Tarde', obs: rT.observacion });
+                checkD.setDate(checkD.getDate() + 1);
+            }
+            
+            if (slotsTaller.length > 0) {
+                document.getElementById('tallerMainTitleText').innerHTML = `<i class="fas fa-tools mr-2"></i>Modificar Taller:`;
+                document.getElementById('tallerTurnoIn').value = slotsTaller[0].turno;
+                document.getElementById('tallerTurnoFin').value = slotsTaller[slotsTaller.length-1].turno;
+                document.getElementById('tallerObs').value = slotsTaller[0].obs || "";
+                
+                // Configurar calendario taller
+                tallerStart = parseLocalDate(slotsTaller[0].fecha);
+                tallerEnd = parseLocalDate(slotsTaller[slotsTaller.length-1].fecha);
+                tallerCalDate = new Date(tallerStart);
+
+                document.getElementById('btnTaller').innerText = "Actualizar Taller"; 
+                document.getElementById('btnBorrarTaller').classList.remove('hidden');
+            } else {
+                document.getElementById('tallerMainTitleText').innerHTML = `<i class="fas fa-tools mr-2"></i>Nuevo Taller:`;
+                document.getElementById('tallerObs').value = "";
+                
+                // Configurar calendario taller a HOY
+                tallerStart = new Date(); tallerStart.setHours(0,0,0,0);
+                tallerEnd = new Date(tallerStart);
+                tallerCalDate = new Date(tallerStart);
+
+                document.getElementById('btnTaller').innerText = "Aplicar Taller"; 
+                document.getElementById('btnBorrarTaller').classList.add('hidden');
+            }
+            
+            renderTallerCal();
             document.getElementById('tallerModal').classList.remove('hidden');
         }
 
         function enviarTaller(e) {
             e.preventDefault();
+            if (!tallerStart || !tallerEnd) { alert("Por favor, selecciona las fechas del taller en el calendario."); return; }
+
             const obs = document.getElementById('tallerObs').value;
-            const fIn = document.getElementById('tallerFechaIn').value; const tIn = document.getElementById('tallerTurnoIn').value;
-            const fFin = document.getElementById('tallerFechaFin').value; const tFin = document.getElementById('tallerTurnoFin').value;
+            const tIn = document.getElementById('tallerTurnoIn').value;
+            const tFin = document.getElementById('tallerTurnoFin').value;
             const hoyIso = getLocalIsoString(new Date());
 
+            // Primero limpiar el taller anterior a partir de hoy
             let checkD = new Date(); checkD.setHours(0,0,0,0);
             for(let i=0; i<60; i++) {
                 let fStr = getLocalIsoString(checkD);
@@ -793,7 +884,14 @@
                 checkD.setDate(checkD.getDate() + 1);
             }
             
-            let startD = parseLocalDate(fIn); let endD = parseLocalDate(fFin);
+            // Aplicar el nuevo taller
+            let startD = new Date(tallerStart); 
+            let endD = new Date(tallerEnd);
+            
+            // Para el backend necesitamos fIn y fFin en string
+            const fInStr = getLocalIsoString(startD);
+            const fFinStr = getLocalIsoString(endD);
+
             for(let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
                 let fStr = getLocalIsoString(d);
                 let turnos = [];
@@ -818,14 +916,13 @@
 
             const payload = {
                 action: "taller", coche: currentCocheIdForTaller, observacion: obs, fechaHoy: hoyIso,
-                inicio: { fecha: fIn, turno: tIn }, fin: { fecha: fFin, turno: tFin }
+                inicio: { fecha: fInStr, turno: tIn }, fin: { fecha: fFinStr, turno: tFin }
             };
             fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         }
 
         function borrarTaller() {
             const hoyIso = getLocalIsoString(new Date());
-            
             let checkD = new Date(); checkD.setHours(0,0,0,0);
             for(let i=0; i<60; i++) {
                 let fStr = getLocalIsoString(checkD);
