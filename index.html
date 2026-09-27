@@ -13,73 +13,101 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        /* Desactiva selección de texto y permite scroll vertical nativo */
-        body { -webkit-user-select: none; user-select: none; touch-action: manipulation; background-color: #f3f4f6; }
+        /* Bloqueo total del rebote del navegador (Anti-bounce nativo) */
+        html, body { 
+            width: 100%; height: 100%; margin: 0; padding: 0;
+            overflow: hidden; position: fixed; 
+            -webkit-user-select: none; user-select: none; touch-action: manipulation; 
+            background-color: #f3f4f6; 
+        }
         
-        .slot-btn:active, .fab-btn:active { transform: scale(0.92); }
+        .slot-btn:active, .fab-btn:active, .nav-btn:active { transform: scale(0.92); }
         
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #0f766e; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Ocultar barra de scroll en el contenedor principal si la hubiera */
-        ::-webkit-scrollbar { display: none; }
+        /* SCROLL 2D FLUIDO Y OCULTO */
+        #scroll-container {
+            overflow: auto; scroll-behavior: smooth;
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
+        #scroll-container::-webkit-scrollbar { display: none; }
+        
+        /* Ajuste Responsive Inteligente: 7 columnas exactas sea cual sea el ancho de la pantalla */
+        .day-col { 
+            flex: 0 0 calc((min(100vw, 56rem) - 86px) / 7); 
+            display: flex; flex-direction: column; align-items: center; border-right: 1px solid #f3f4f6; 
+        }
+        .day-col:last-child { border-right: none; }
+
+        /* Estilo para los botones de coche sin globo, ocupando el 100% */
+        .car-image-btn {
+            width: 100%; height: 100%;
+            background-color: white;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.1s;
+            overflow: hidden; border-radius: 0.5rem;
+        }
+        .car-image-btn img {
+            width: 100%; height: 100%;
+            object-fit: contain;
+            mix-blend-mode: multiply; /* Funde el fondo blanco de la foto con el botón */
+            transform: scale(1.20); /* Zoom para recortar los márgenes blancos propios de la imagen */
+        }
     </style>
 </head>
-<body class="min-h-screen font-sans flex flex-col bg-gray-100">
+<body class="font-sans flex flex-col items-center justify-center">
 
-    <!-- Al quitar max-w-md y usar w-full, la app es 100% responsiva y adaptable a modo horizontal -->
-    <div class="w-full min-h-screen bg-white shadow-2xl relative flex flex-col overflow-hidden mx-auto">
+    <!-- Contenedor adaptativo: max-w-4xl hace que responda genial si giras el móvil o usas Tablet -->
+    <div class="w-full h-full max-w-4xl bg-white shadow-2xl relative flex flex-col overflow-hidden mx-auto">
         
-        <!-- CABECERA HERO (EXPANDIDA) -->
-        <header class="relative shrink-0 w-full z-30 bg-white">
+        <!-- CABECERA HERO (FIJA) -->
+        <header class="relative shrink-0 w-full z-40 bg-white">
             
             <!-- Botón Sincronizar FLOTANTE SOBRE LA IMAGEN (Arriba derecha) -->
-            <button onclick="cargarDatos(true)" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/40 backdrop-blur-md hover:bg-white border border-white/50 transition active:scale-95 shadow-md z-40">
+            <button onclick="cargarDatos(true)" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/40 backdrop-blur-md hover:bg-white border border-white/50 transition active:scale-95 shadow-md z-50">
                 <i id="sync-icon" class="fas fa-sync-alt text-teal-900 text-sm"></i>
-                <div id="sync-loader" class="loader absolute hidden border-white border-t-teal-900 border-[3px] w-4 h-4"></div>
+                <div id="sync-loader" class="loader absolute hidden border-gray-200 border-t-teal-900 border-[3px] w-4 h-4"></div>
             </button>
 
             <!-- Imagen Portada (Altura ampliada, ancho completo) -->
-            <div class="w-full h-[180px] md:h-[240px] relative overflow-hidden bg-[#0c2f2b]">
-                <!-- object-[center_60%] recorta la imagen por arriba y abajo para centrar el BMW -->
-                <img src="27989.jpg" alt="Portada" class="w-full h-full object-cover object-[center_60%] absolute inset-0 scale-105">
-                
+            <div class="w-full h-[165px] md:h-[220px] relative overflow-hidden bg-[#0c2f2b]">
+                <img src="27989.jpg" alt="Portada" class="w-full h-[240px] md:h-[300px] object-cover object-[center_60%] absolute top-[-35px] md:top-[-45px]">
                 <!-- Degradado suave inferior -->
                 <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none"></div>
             </div>
             
             <!-- Flechas Flotantes y Texto "SEMANA" sobre el degradado -->
-            <div class="absolute bottom-0 w-full flex items-end z-40 px-1 pb-1">
-                <!-- Espaciador exacto para alinear con la columna de los coches (86px) -->
+            <div class="absolute bottom-0 w-full flex items-end z-50 px-1 pb-1 pointer-events-none">
+                <!-- Espaciador exacto para alinear la flecha con la columna de los días (86px de los coches) -->
                 <div class="w-[86px] flex-shrink-0"></div>
                 
-                <!-- Controles alineados debajo de las columnas de días -->
-                <div class="flex-1 flex justify-between items-center px-1">
-                    <button onclick="cambiarSemana(-1)" class="w-9 h-9 flex items-center justify-center text-teal-800 bg-white/50 hover:bg-white backdrop-blur shadow-sm rounded-full transition active:scale-90 border border-white/60">
+                <!-- Controles activos -->
+                <div class="flex-1 flex justify-between items-center px-1 pointer-events-auto">
+                    <button onclick="scrollSieteDias(-1)" class="nav-btn w-9 h-9 flex items-center justify-center text-teal-800 bg-white/70 hover:bg-white backdrop-blur shadow-sm rounded-full transition active:scale-90 border border-white/60">
                         <i class="fas fa-chevron-left"></i>
                     </button>
                     <span class="text-[11px] font-black text-gray-500 uppercase tracking-widest drop-shadow-md pb-0.5">Semana</span>
-                    <button onclick="cambiarSemana(1)" class="w-9 h-9 flex items-center justify-center text-teal-800 bg-white/50 hover:bg-white backdrop-blur shadow-sm rounded-full transition active:scale-90 border border-white/60">
+                    <button onclick="scrollSieteDias(1)" class="nav-btn w-9 h-9 flex items-center justify-center text-teal-800 bg-white/70 hover:bg-white backdrop-blur shadow-sm rounded-full transition active:scale-90 border border-white/60">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- CONTENEDOR PRINCIPAL (Coches Izq + 7 Columnas Flexibles Der) -->
-        <main class="flex-1 flex w-full relative z-20 bg-white overflow-y-auto pb-32"> 
+        <!-- CONTENEDOR PRINCIPAL SCROLL NATIVO -->
+        <main id="scroll-container" class="flex-1 w-full relative z-20 bg-white flex pb-28"> 
             
             <!-- COLUMNA FIJA IZQUIERDA (Imágenes Coches al 100%) -->
-            <div class="w-[86px] flex-shrink-0 flex flex-col bg-white border-r border-gray-200 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
-                <!-- Cuadro superior en blanco (altura de las fechas) -->
-                <div class="h-[48px] w-full border-b border-gray-200 bg-white"></div>
+            <div class="w-[86px] flex-shrink-0 flex flex-col bg-white border-r border-gray-200 sticky left-0 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                <!-- Cuadro superior en blanco fijo verticalmente -->
+                <div class="h-[48px] w-full border-b border-gray-200 bg-white sticky top-0 z-40"></div>
                 <!-- Columna generada por JS -->
                 <div id="fixed-cars-col" class="flex flex-col"></div>
             </div>
 
-            <!-- CUADRÍCULA DE RESERVAS (7 Columnas Flexibles) -->
-            <!-- Flex-1 hace que ocupe todo el espacio restante. Si giras el móvil, se ensancha -->
-            <div id="calendar-grid" class="flex-1 flex w-full"></div>
+            <!-- CUADRÍCULA DE RESERVAS (Deslizable Horizontalmente) -->
+            <div id="calendar-grid" class="flex"></div>
             
         </main>
 
@@ -121,18 +149,18 @@
             </div>
 
             <div class="mb-5 text-gray-700 bg-gray-50 p-3 rounded-lg text-sm flex items-center">
-                <div class="w-16 h-10 mr-3 bg-white rounded flex justify-center items-center overflow-hidden mix-blend-multiply">
+                <div class="w-20 h-12 mr-3 bg-white rounded flex justify-center items-center overflow-hidden mix-blend-multiply border border-gray-200 p-1 shadow-sm">
                     <img id="modalCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-125">
                 </div>
                 <div>
-                    <p><strong id="modalCocheName"></strong></p>
+                    <p><strong id="modalCocheName" class="text-base uppercase tracking-wide"></strong></p>
                     <p class="mt-0.5"><i class="far fa-calendar-alt text-teal-600 mr-1"></i> <span id="modalFecha"></span> (<span id="modalTurno" class="font-semibold"></span>)</p>
                 </div>
             </div>
             <form id="formReserva" onsubmit="enviarReservaNormal(event)">
                 <input type="text" id="inputNombre" placeholder="Tu Nombre o Horario..." class="w-full mb-2 border-2 border-gray-200 rounded-xl p-3 text-lg focus:border-teal-600 focus:outline-none">
                 <p class="text-[11px] text-gray-500 mb-4">Déjalo en blanco para eliminar la reserva.</p>
-                <button type="submit" id="btnConfirmarReserva" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mb-2 flex justify-center items-center">Guardar</button>
+                <button type="submit" id="btnConfirmarReserva" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mb-2 flex justify-center items-center shadow-md">Guardar</button>
             </form>
         </div>
     </div>
@@ -191,7 +219,7 @@
                         <select id="viajeTurnoFin" class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm"><option>Mañana</option><option>Tarde</option></select>
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mt-2 flex justify-center items-center">Guardar Viaje</button>
+                <button type="submit" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mt-2 flex justify-center items-center shadow-md">Guardar Viaje</button>
             </form>
         </div>
     </div>
@@ -224,7 +252,7 @@
                     </div>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <button type="submit" id="btnTaller" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-3 rounded-xl flex items-center justify-center transition">Aplicar Taller</button>
+                    <button type="submit" id="btnTaller" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-3 rounded-xl flex items-center justify-center transition shadow-md">Aplicar Taller</button>
                     <button type="button" id="btnBorrarTaller" onclick="borrarTaller()" class="hidden w-full bg-white border border-amber-200 text-amber-700 hover:bg-amber-50 font-bold py-3 rounded-xl transition flex items-center justify-center">
                         <i class="fas fa-trash-alt mr-2"></i> Quitar del Taller
                     </button>
@@ -251,9 +279,16 @@
         let currentCocheIdForTaller = "";
         let isEditModeInfo = false; 
         
-        // El calendario ahora usa una fecha base y pinta 7 días. Ya no necesitamos un array de 60 días.
+        // Ahora cargamos 60 días para poder hacer scroll horizontal natural
+        let arrayFechas = [];
         let baseDate = new Date();
         baseDate.setHours(0,0,0,0);
+        baseDate.setDate(baseDate.getDate() - 15);
+        for(let i=0; i<60; i++) {
+            let d = new Date(baseDate);
+            d.setDate(baseDate.getDate() + i);
+            arrayFechas.push(d);
+        }
 
         window.addEventListener('DOMContentLoaded', () => {
             const selectCoche = document.getElementById('viajeCoche');
@@ -275,9 +310,7 @@
         });
 
         document.addEventListener('visibilitychange', () => {
-            if(document.visibilityState === 'visible') {
-                cargarDatos(false); 
-            }
+            if(document.visibilityState === 'visible') { cargarDatos(false); }
         });
 
         function cargarDatos(mostrarLoader = false) {
@@ -288,6 +321,7 @@
             if (mostrarLoader) {
                 floatLoader.classList.remove('hidden');
                 setTimeout(() => floatLoader.classList.remove('opacity-0'), 10);
+                
                 syncIcon.classList.add('hidden');
                 syncLoader.classList.remove('hidden');
             }
@@ -330,49 +364,55 @@
         }
 
         function irAHoy() {
-            baseDate = new Date();
-            baseDate.setHours(0,0,0,0);
-            renderApp();
+            const todayStr = new Date().toDateString();
+            const todayIndex = arrayFechas.findIndex(d => d.toDateString() === todayStr);
+            if(todayIndex !== -1) {
+                const diaEl = document.getElementById(`dia-${todayIndex}`);
+                if (diaEl) {
+                    const container = document.getElementById('scroll-container');
+                    // Calculamos la posición considerando que la columna izquierda es pegajosa
+                    container.scrollTo({ left: diaEl.offsetLeft - 86, behavior: 'smooth' });
+                }
+            }
         }
 
-        function cambiarSemana(direccion) {
-            baseDate.setDate(baseDate.getDate() + (direccion * 7));
-            renderApp();
+        // SCROLL INTELIGENTE PARA LAS FLECHAS
+        function scrollSieteDias(direccion) { 
+            const container = document.getElementById('scroll-container');
+            const colWidth = container.clientWidth - 86; // Ancho visible exacto de 7 columnas
+            container.scrollBy({ left: direccion * colWidth, behavior: 'smooth' }); 
         }
 
         function renderApp() {
             const todayStr = new Date().toDateString();
             
-            // CELDAS FIJAS: IMÁGENES AL 100% CON ZOOM INTERNO (Scale-125)
+            // COLUMNA FIJA: IMÁGENES AL 100% CON ZOOM INTERNO
             let fixedHtml = "";
             coches.forEach(coche => {
                 fixedHtml += `
                     <div class="h-[6rem] border-b border-gray-100 last:border-b-0 w-full bg-white overflow-hidden p-1">
-                        <button onclick="mostrarDatosCoche('${coche.id}')" class="w-full h-full active:scale-95 transition focus:outline-none flex items-center justify-center rounded-lg">
-                            <img src="${coche.img}" alt="${coche.alias}" class="w-full h-full object-contain mix-blend-multiply scale-125" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23eee\\'/></svg>'">
+                        <button onclick="mostrarDatosCoche('${coche.id}')" class="car-image-btn active:scale-95 border border-gray-100 shadow-sm focus:outline-none">
+                            <img src="${coche.img}" alt="${coche.alias}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23eee\\'/></svg>'">
                         </button>
                     </div>`;
             });
             document.getElementById('fixed-cars-col').innerHTML = fixedHtml;
 
-            // CALENDARIO DESLIZABLE (7 Columnas Flexibles usando Flexbox Puro)
+            // CALENDARIO DESLIZABLE (60 Días)
             let gridHtml = "";
-            for (let i = 0; i < 7; i++) {
-                let fechaObj = new Date(baseDate);
-                fechaObj.setDate(baseDate.getDate() + i);
+            arrayFechas.forEach((fechaObj, index) => {
                 const isToday = fechaObj.toDateString() === todayStr;
                 const fechaStr = new Date(fechaObj.getTime() - (fechaObj.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
                 
-                const bgClass = isToday ? 'bg-teal-50/50' : 'bg-transparent';
+                const bgClass = isToday ? 'bg-teal-50/40 border-teal-100' : 'bg-transparent border-gray-100';
                 const headerBg = isToday ? 'bg-teal-50' : 'bg-white';
                 const textClass = isToday ? 'text-teal-800' : 'text-gray-500';
                 
-                // Flex-1 w-0 hace que las 7 columnas se repartan el espacio 100% equitativamente
                 let colHtml = `
-                <div class="flex-1 w-0 min-w-[44px] flex flex-col items-center border-r border-gray-100 last:border-r-0 ${bgClass}">
-                    <div class="h-[48px] w-full flex flex-col items-center justify-center border-b border-gray-200 ${headerBg}">
+                <div class="day-col ${bgClass}" id="dia-${index}">
+                    <div class="h-[48px] w-full flex flex-col items-center justify-center border-b border-gray-200 sticky top-0 z-30 ${headerBg}">
                         <span class="text-[9px] ${textClass} font-bold tracking-wider">${diasNombres[fechaObj.getDay()]}</span>
-                        <span class="text-[14px] font-black ${textClass}">${fechaObj.getDate()}</span>
+                        <span class="text-[13px] font-black ${textClass}">${fechaObj.getDate()}</span>
                     </div>`;
                 
                 coches.forEach(coche => {
@@ -412,26 +452,29 @@
                         else styleT += "text-teal-700 border-[1.5px] border-teal-500 border-t-0 ";
                     }
 
-                    let midLine = `<div class="h-[1.5px] bg-teal-100 w-[90%] mx-auto"></div>`;
+                    let midLine = `<div class="h-[1px] bg-teal-100 w-[90%] mx-auto"></div>`;
                     if (isTallerM && isTallerT) {
                         midLine = `<div class="h-[2.5px] bg-[#f59e0b] w-full"></div>`; 
                     } else if (isResM && isResT) {
-                        midLine = `<div class="h-[2px] bg-[#2b0000] w-[95%] mx-auto"></div>`; 
+                        midLine = `<div class="h-[1.5px] bg-[#2b0000] w-[95%] mx-auto"></div>`; 
                     }
 
-                    // Altura a 6rem (~96px) para casillas de reservas grandes y legibles
                     colHtml += `
-                        <div class="h-[6rem] w-full px-1 py-[6px] flex flex-col border-b border-gray-100 last:border-b-0">
-                            <button class="slot-btn flex-1 flex items-center justify-center font-bold text-[11px] transition-colors ${styleM}" onclick="${clickM}">M</button>
+                        <div class="h-[6rem] w-full px-0.5 py-1.5 flex flex-col border-b border-gray-100 last:border-b-0">
+                            <button class="slot-btn flex-1 flex items-center justify-center font-bold text-[10px] transition-colors ${styleM}" onclick="${clickM}">M</button>
                             ${midLine}
-                            <button class="slot-btn flex-1 flex items-center justify-center font-bold text-[11px] transition-colors ${styleT}" onclick="${clickT}">T</button>
+                            <button class="slot-btn flex-1 flex items-center justify-center font-bold text-[10px] transition-colors ${styleT}" onclick="${clickT}">T</button>
                         </div>`;
                 });
                 
                 colHtml += `</div>`;
                 gridHtml += colHtml;
-            }
+            });
             document.getElementById('calendar-grid').innerHTML = gridHtml;
+            
+            if(!window.haCentradoHoy) {
+                setTimeout(() => { irAHoy(); window.haCentradoHoy = true; }, 100);
+            }
         }
 
         function cerrarModal(id) { document.getElementById(id).classList.add('hidden'); }
@@ -563,7 +606,6 @@
             const hoyIso = new Date().toISOString().split('T')[0];
             let slotsTaller = [];
             
-            // Recorremos los 7 días visibles y futuros teóricos
             let checkD = new Date(); checkD.setHours(0,0,0,0);
             for(let i=0; i<60; i++) {
                 let fStr = checkD.toISOString().split('T')[0];
