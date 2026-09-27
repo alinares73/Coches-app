@@ -6,7 +6,7 @@
     <title>Coches Ciudadela</title>
     
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f766e"> 
+    <meta name="theme-color" content="#042f2e"> 
     <meta name="apple-mobile-web-app-capable" content="yes">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,68 +14,142 @@
     
     <style>
         body { -webkit-user-select: none; user-select: none; touch-action: manipulation; overflow: hidden; background-color: #f9fafb; }
-        .bg-teal-header { background-color: #0f766e; }
         
         .slot-btn:active, .car-btn:active, .fab-btn:active { transform: scale(0.92); }
         
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #0f766e; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #0f766e; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        /* SCROLL FLUIDO */
         #scroll-container {
             display: flex; overflow-x: auto; scroll-behavior: smooth;
             -ms-overflow-style: none; scrollbar-width: none;
         }
         #scroll-container::-webkit-scrollbar { display: none; }
-        .day-col { width: 42px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+        
+        /* Ajuste de columnas para que quepan 7 exactas en la pantalla restante */
+        /* Calculado dinámicamente con JS, pero fijamos un ancho base */
+        .day-col { flex: 1 0 14.28%; min-width: 44px; display: flex; flex-direction: column; align-items: center; border-right: 1px solid #f3f4f6; }
+        .day-col:last-child { border-right: none; }
+        
+        /* Contenedor de la imagen de cabecera con recorte inferior */
+        .header-image-container {
+            width: 100%;
+            height: 120px; /* Altura de la cabecera */
+            overflow: hidden;
+            position: relative;
+        }
+        .header-image-container img {
+            width: 100%;
+            height: 140px; /* Hacemos la imagen más grande que el contenedor para "recortar" la parte de abajo */
+            object-fit: cover;
+            object-position: top; /* Mantener la parte de arriba alineada */
+        }
+        /* Degradado oscuro para que el texto o iconos destaquen si hace falta */
+        .header-gradient {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 40px;
+            background: linear-gradient(to top, rgba(249, 250, 251, 1), rgba(249, 250, 251, 0));
+        }
+
+        /* Estilo para los botones de coche con imagen */
+        .car-image-btn {
+            width: 72px; /* Más ancho para la imagen */
+            height: 4.2rem;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            background-color: white;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s;
+        }
+        .car-image-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Para que no se deforme el coche */
+            padding: 2px;
+        }
     </style>
 </head>
 <body class="min-h-screen font-sans flex flex-col items-center">
 
     <div class="w-full max-w-md bg-white h-screen shadow-2xl relative flex flex-col">
         
-        <header class="bg-teal-header text-white pt-6 pb-4 px-4 shadow-md z-30 relative shrink-0">
-            <div class="flex items-center justify-between">
-                <div class="w-14"></div>
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-car-side text-2xl opacity-90"></i>
-                    <h1 class="text-xl font-bold tracking-wider">COCHES</h1>
-                </div>
-                <button onclick="irAHoy()" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-bold py-1.5 px-3 rounded-full text-xs tracking-wider transition shadow-sm border border-white border-opacity-30">
-                    HOY
-                </button>
+        <!-- NUEVA CABECERA CON IMAGEN -->
+        <header class="relative shrink-0 bg-white">
+            <div class="header-image-container">
+                <img src="27989.jpg" alt="Coches Ciudadela">
+                <div class="header-gradient"></div>
             </div>
+            
+            <!-- Botón Sincronizar reubicado pequeño y discreto -->
+            <button onclick="cargarDatos(true)" class="absolute top-3 right-3 bg-white bg-opacity-80 backdrop-blur rounded-full w-8 h-8 flex items-center justify-center shadow transition active:scale-95">
+                <i id="sync-icon" class="fas fa-sync-alt text-teal-800 text-sm"></i>
+                <div id="sync-loader" class="loader absolute hidden"></div>
+            </button>
         </header>
 
-        <main class="flex-1 flex w-full relative bg-white overflow-hidden">
-            <div class="w-[50px] flex-shrink-0 flex flex-col bg-gray-50 border-r border-gray-200 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
-                <div class="h-[52px] w-full flex items-center justify-center border-b border-gray-200 bg-gray-100">
-                    <button onclick="scrollSieteDias(-1)" class="w-8 h-8 flex items-center justify-center text-teal-700 hover:bg-gray-200 rounded-full transition">
-                        <i class="fas fa-chevron-left text-sm"></i>
-                    </button>
+        <!-- CONTENEDOR PRINCIPAL (Tabla) -->
+        <main class="flex-1 flex flex-col w-full relative bg-white overflow-hidden pb-[80px]"> <!-- pb para los botones flotantes -->
+            
+            <!-- Zona Superior: Coches Fijos Izq + Días Deslizables Der -->
+            <div class="flex-1 flex w-full relative bg-white">
+                
+                <!-- COLUMNA FIJA IZQUIERDA (Imágenes Coches) -->
+                <div class="w-[82px] flex-shrink-0 flex flex-col bg-white border-r border-gray-200 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                    <!-- Espacio en blanco esquina superior izq (encima de los coches, al lado de los días) -->
+                    <div class="h-[52px] w-full border-b border-gray-200 bg-gray-50"></div>
+                    <!-- Lista de coches inyectada por JS -->
+                    <div id="fixed-cars-col" class="flex flex-col"></div>
                 </div>
-                <div id="fixed-cars-col" class="flex flex-col pb-24"></div>
+
+                <!-- ÁREA DESLIZABLE (Calendario de 7 columnas exactas) -->
+                <div id="scroll-container" class="flex-1 relative bg-white">
+                    <div id="calendar-grid" class="flex w-full"></div>
+                </div>
+
             </div>
 
-            <div id="scroll-container" class="flex-1 relative bg-white">
-                <div id="calendar-grid" class="flex gap-x-[2px] px-1 pb-24"></div>
-            </div>
-
-            <div class="absolute right-0 top-0 h-[52px] w-8 bg-gradient-to-l from-white via-white to-transparent flex items-center justify-end pr-1 z-20 pointer-events-none">
-                <button onclick="scrollSieteDias(1)" class="w-6 h-8 text-teal-700 flex items-center justify-center pointer-events-auto hover:text-teal-900 transition">
-                    <i class="fas fa-chevron-right text-sm"></i>
+            <!-- NUEVA ZONA INFERIOR: Flechas de Navegación -->
+            <div class="w-full h-12 bg-gray-100 border-t border-gray-200 flex items-center justify-between px-4 z-20">
+                <button onclick="scrollSieteDias(-1)" class="w-10 h-10 flex items-center justify-center text-teal-700 bg-white shadow-sm rounded-full active:scale-90 transition">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Semana</span>
+                <button onclick="scrollSieteDias(1)" class="w-10 h-10 flex items-center justify-center text-teal-700 bg-white shadow-sm rounded-full active:scale-90 transition">
+                    <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
+            
         </main>
         
-        <div id="floating-loader" class="fixed bottom-[88px] right-6 bg-gray-800 text-white px-4 py-2.5 rounded-full shadow-lg flex items-center justify-center text-xs font-semibold transition-opacity duration-300 z-40 opacity-0 hidden pointer-events-none border border-gray-700">
-            <i class="fas fa-spinner fa-spin mr-2 text-teal-400 text-sm"></i> Cargando datos de Excel...
+        <!-- AVISO DE CARGA FLOTANTE -->
+        <div id="floating-loader" class="fixed bottom-[96px] right-6 bg-gray-800 text-white px-4 py-2.5 rounded-full shadow-lg flex items-center justify-center text-xs font-semibold transition-opacity duration-300 z-40 opacity-0 hidden pointer-events-none border border-gray-700">
+            <i class="fas fa-spinner fa-spin mr-2 text-teal-400 text-sm"></i> Cargando...
         </div>
 
-        <button onclick="abrirViajeModal()" class="fab-btn fixed bottom-6 right-6 bg-teal-700 text-white px-5 py-3.5 rounded-full shadow-2xl flex items-center justify-center hover:bg-teal-800 transition z-50 border-2 border-white">
-            <i class="fas fa-route text-xl mr-2"></i>
-            <span class="text-sm font-bold uppercase tracking-wide">Añadir Viaje</span>
-        </button>
+        <!-- BOTONES FLOTANTES INFERIORES -->
+        <div class="fixed bottom-6 left-0 w-full px-6 flex justify-between items-end z-50 max-w-md pointer-events-none">
+            
+            <!-- BOTÓN HOY (Izquierda) -->
+            <button onclick="irAHoy()" class="fab-btn pointer-events-auto bg-white text-teal-700 font-black px-4 py-3 rounded-full shadow-[0_4px_10px_rgba(0,0,0,0.15)] flex items-center justify-center hover:bg-gray-50 transition border border-gray-200 h-[46px] mb-1">
+                HOY
+            </button>
+
+            <!-- BOTÓN AÑADIR VIAJE (Derecha) -->
+            <button onclick="abrirViajeModal()" class="fab-btn pointer-events-auto bg-teal-700 text-white px-5 py-3.5 rounded-full shadow-[0_8px_15px_rgba(15,118,110,0.3)] flex items-center justify-center hover:bg-teal-800 transition border-2 border-white">
+                <i class="fas fa-route text-xl mr-2"></i>
+                <span class="text-sm font-bold uppercase tracking-wide">Añadir Viaje</span>
+            </button>
+            
+        </div>
     </div>
+
+    <!-- === MODALES === -->
 
     <!-- MODAL RESERVA -->
     <div id="reservaModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
@@ -90,9 +164,15 @@
                 <p id="avisoTallerText" class="italic"></p>
             </div>
 
-            <div class="mb-5 text-gray-700 bg-gray-50 p-3 rounded-lg text-sm">
-                <p><i class="fas fa-car text-teal-600 mr-2"></i> <strong id="modalCoche"></strong></p>
-                <p class="mt-1"><i class="far fa-calendar-alt text-teal-600 mr-2"></i> <span id="modalFecha"></span> (<span id="modalTurno" class="font-semibold"></span>)</p>
+            <div class="mb-5 text-gray-700 bg-gray-50 p-3 rounded-lg text-sm flex items-center">
+                <!-- Mostraremos la imagen en el modal también -->
+                <div class="w-12 h-8 mr-3 bg-white rounded border border-gray-200 p-0.5 flex justify-center items-center">
+                    <img id="modalCocheImg" src="" alt="Coche" class="max-h-full max-w-full object-contain">
+                </div>
+                <div>
+                    <p><strong id="modalCocheName"></strong></p>
+                    <p class="mt-0.5"><i class="far fa-calendar-alt text-teal-600 mr-1"></i> <span id="modalFecha"></span> (<span id="modalTurno" class="font-semibold"></span>)</p>
+                </div>
             </div>
             <form id="formReserva" onsubmit="enviarReservaNormal(event)">
                 <input type="text" id="inputNombre" placeholder="Tu Nombre o Horario..." class="w-full mb-2 border-2 border-gray-200 rounded-xl p-3 text-lg focus:border-teal-600 focus:outline-none">
@@ -106,18 +186,18 @@
     <div id="infoCocheModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl max-h-[90vh] flex flex-col">
             
-            <div class="relative flex items-center justify-center mb-3">
-                <div class="w-12 h-12 bg-teal-50 rounded-full flex items-center justify-center text-teal-700 text-xl border border-teal-100">
-                    <i class="fas fa-clipboard-list"></i>
+            <div class="relative flex flex-col items-center justify-center mb-2 border-b border-gray-100 pb-3">
+                <div class="w-24 h-16 bg-white rounded-lg border border-gray-200 p-1 flex items-center justify-center mb-2 shadow-sm">
+                    <img id="infoCocheImg" src="" alt="Coche" class="max-h-full max-w-full object-contain">
                 </div>
-                <button id="btnConfigCoche" onclick="toggleEditCoche()" class="absolute right-0 top-1 text-gray-400 hover:text-teal-600 text-xl transition p-2">
+                <h3 class="text-lg font-bold text-gray-800 text-center" id="infoCocheTitle">Datos Vehículo</h3>
+                
+                <button id="btnConfigCoche" onclick="toggleEditCoche()" class="absolute right-0 top-0 text-gray-400 hover:text-teal-600 text-xl transition p-2">
                     <i class="fas fa-cog"></i>
                 </button>
             </div>
             
-            <h3 class="text-lg font-bold text-gray-800 text-center mb-4" id="infoCocheTitle">Datos Vehículo</h3>
-            
-            <div id="infoCocheContent" class="text-gray-600 text-sm bg-gray-50 p-3 rounded-xl border border-gray-100 flex-1 overflow-y-auto mb-4"></div>
+            <div id="infoCocheContent" class="text-gray-600 text-sm bg-gray-50 p-3 rounded-xl border border-gray-100 flex-1 overflow-y-auto mb-4 mt-2"></div>
             
             <div id="infoCocheActions">
                 <button onclick="abrirTallerModal()" class="w-full bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 font-bold py-3 rounded-xl transition flex items-center justify-center mb-2">
@@ -138,7 +218,7 @@
             <form onsubmit="enviarViaje(event)">
                 <div class="mb-3">
                     <label class="text-xs font-bold text-gray-500 uppercase">Coche</label>
-                    <select id="viajeCoche" class="w-full border border-gray-300 p-2 rounded-lg bg-white mt-1"></select>
+                    <select id="viajeCoche" class="w-full border border-gray-300 p-2 rounded-lg bg-white mt-1 font-medium"></select>
                 </div>
                 <div class="mb-3">
                     <label class="text-xs font-bold text-gray-500 uppercase">Nombre / Conductor</label>
@@ -167,7 +247,7 @@
             <div class="flex justify-between items-center mb-3 border-b pb-2 border-amber-100">
                 <h2 class="text-xl font-bold text-amber-800">
                     <span id="tallerMainTitleText"><i class="fas fa-tools mr-2"></i>Taller:</span> 
-                    <span id="tallerCocheName" class="ml-1 text-lg"></span>
+                    <span id="tallerCocheNameText" class="ml-1 text-lg"></span>
                 </h2>
                 <button onclick="cerrarModal('tallerModal')" class="text-gray-400 text-2xl">&times;</button>
             </div>
@@ -201,12 +281,13 @@
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7RyhObzV_0lLV4Wc_10BSCvY6Y0iAUWKAJt6gsH641xsEXvQtzPSgb3X_jfuMGXkLgw/exec';
         
+        // Imágenes de los coches asociadas a sus IDs
         const coches = [
-            { id: "BLANCO", alias: "Qashqai<br>Blanco" },
-            { id: "POLO", alias: "Polo" },
-            { id: "KONA", alias: "Kona" },
-            { id: "ATECA", alias: "Ateca" },
-            { id: "GRIS", alias: "Qashqai<br>Gris" }
+            { id: "BLANCO", alias: "Qashqai Blanco", img: "30492.jpg" },
+            { id: "POLO", alias: "Polo", img: "30490.jpg" },
+            { id: "KONA", alias: "Kona", img: "30494.jpg" },
+            { id: "ATECA", alias: "Ateca", img: "30489.jpg" },
+            { id: "GRIS", alias: "Qashqai Gris", img: "30498.jpg" }
         ];
 
         const diasNombres = ['D', 'L', 'M', 'X', 'J', 'V', 'S']; 
@@ -228,7 +309,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             const selectCoche = document.getElementById('viajeCoche');
-            coches.forEach(c => selectCoche.innerHTML += `<option value="${c.id}">${c.alias.replace('<br>',' ')}</option>`);
+            coches.forEach(c => selectCoche.innerHTML += `<option value="${c.id}">${c.alias}</option>`);
             
             const hoyIso = new Date().toISOString().split('T')[0];
             document.getElementById('viajeFechaIn').value = hoyIso;
@@ -253,10 +334,15 @@
 
         function cargarDatos(mostrarLoader = false) {
             const floatLoader = document.getElementById('floating-loader');
+            const syncIcon = document.getElementById('sync-icon');
+            const syncLoader = document.getElementById('sync-loader');
             
             if (mostrarLoader) {
                 floatLoader.classList.remove('hidden');
                 setTimeout(() => floatLoader.classList.remove('opacity-0'), 10);
+                
+                syncIcon.classList.add('hidden');
+                syncLoader.classList.remove('hidden');
             }
             
             fetch(SCRIPT_URL).then(r => r.json()).then(data => {
@@ -265,7 +351,11 @@
             }).catch(e => console.log("Modo offline")).finally(() => {
                 if (mostrarLoader) {
                     floatLoader.classList.add('opacity-0');
-                    setTimeout(() => floatLoader.classList.add('hidden'), 300);
+                    setTimeout(() => {
+                        floatLoader.classList.add('hidden');
+                        syncIcon.classList.remove('hidden');
+                        syncLoader.classList.add('hidden');
+                    }, 300);
                 }
             });
         }
@@ -282,35 +372,51 @@
             renderApp();
         }
 
+        function getImgForCoche(cocheId) {
+            const found = coches.find(c => c.id === cocheId);
+            return found ? found.img : "";
+        }
+
+        function getAliasForCoche(cocheId) {
+            const found = coches.find(c => c.id === cocheId);
+            return found ? found.alias : cocheId;
+        }
+
         function irAHoy() {
             const todayStr = new Date().toDateString();
             const todayIndex = arrayFechas.findIndex(d => d.toDateString() === todayStr);
             if(todayIndex !== -1) {
                 const diaEl = document.getElementById(`dia-${todayIndex}`);
-                if (diaEl) document.getElementById('scroll-container').scrollTo({ left: diaEl.offsetLeft, behavior: 'smooth' });
+                if (diaEl) {
+                    const container = document.getElementById('scroll-container');
+                    // Calculamos la posición exacta para dejar la columna actual alineada a la izquierda
+                    container.scrollTo({ left: diaEl.offsetLeft, behavior: 'smooth' });
+                }
             }
         }
 
         function renderApp() {
             const todayStr = new Date().toDateString();
             
+            // COLUMNA FIJA: RENDER DE IMÁGENES
             let fixedHtml = "";
             coches.forEach(coche => {
                 fixedHtml += `
-                    <div class="flex items-center justify-center py-[5px] h-[4.7rem]">
-                        <button onclick="mostrarDatosCoche('${coche.id}', '${coche.alias}')" class="w-[42px] h-[4.2rem] rounded-xl border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center text-[8px] font-bold text-gray-600 text-center leading-tight gap-[2px] transition active:bg-gray-100">
-                            <span>${coche.alias}</span>
-                            <i class="far fa-file-alt text-teal-600 text-[11px]"></i>
+                    <div class="flex items-center justify-center py-[5px] h-[4.7rem] px-1">
+                        <button onclick="mostrarDatosCoche('${coche.id}')" class="car-image-btn active:scale-95">
+                            <img src="${coche.img}" alt="${coche.alias}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23eee\\'/></svg>'">
                         </button>
                     </div>`;
             });
             document.getElementById('fixed-cars-col').innerHTML = fixedHtml;
 
+            // CALENDARIO DESLIZABLE (7 COLUMNAS)
             let gridHtml = "";
             arrayFechas.forEach((fechaObj, index) => {
                 const isToday = fechaObj.toDateString() === todayStr;
                 const fechaStr = new Date(fechaObj.getTime() - (fechaObj.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-                const bgClass = isToday ? 'bg-teal-50 border-x border-teal-200 shadow-sm z-10' : 'bg-transparent';
+                
+                const bgClass = isToday ? 'bg-teal-50 border-teal-200' : 'bg-transparent border-gray-100';
                 const textClass = isToday ? 'text-teal-800' : 'text-gray-500';
                 
                 let colHtml = `
@@ -326,8 +432,8 @@
                     const resM = reservasActivas.get(idM);
                     const resT = reservasActivas.get(idT);
                     
-                    const clickM = `abrirReservaNormal('${coche.id}', '${coche.alias.replace('<br>',' ')}', '${fechaStr}', 'Mañana', '${fechaObj.toLocaleDateString()}')`;
-                    const clickT = `abrirReservaNormal('${coche.id}', '${coche.alias.replace('<br>',' ')}', '${fechaStr}', 'Tarde', '${fechaObj.toLocaleDateString()}')`;
+                    const clickM = `abrirReservaNormal('${coche.id}', '${fechaStr}', 'Mañana', '${fechaObj.toLocaleDateString()}')`;
+                    const clickT = `abrirReservaNormal('${coche.id}', '${fechaStr}', 'Tarde', '${fechaObj.toLocaleDateString()}')`;
 
                     const isResM = resM && resM.nombre !== "";
                     const isResT = resT && resT.nombre !== "";
@@ -337,14 +443,13 @@
                     let styleM = "rounded-t-full ";
                     let styleT = "rounded-b-full ";
 
-                    // COLOR GRANATE Y BORDE AMARILLO-ANARANJADO PARA TALLER
                     if (isResM) {
                         styleM += "bg-[#901a1e] text-white shadow-inner ";
-                        if (isTallerM) styleM += "border-[2.5px] border-[#f59e0b] border-b-0 "; // Taller = Amarillo-Anaranjado
-                        else styleM += "border-2 border-[#2b0000] border-b-0 "; // Normal = Casi negro
+                        if (isTallerM) styleM += "border-[2.5px] border-[#f59e0b] border-b-0 "; 
+                        else styleM += "border-2 border-[#2b0000] border-b-0 "; 
                     } else {
                         styleM += "bg-white ";
-                        if (isTallerM) styleM += "text-[#b45309] border-[2.5px] border-[#f59e0b] border-b-0 shadow-inner "; // Taller libre
+                        if (isTallerM) styleM += "text-[#b45309] border-[2.5px] border-[#f59e0b] border-b-0 shadow-inner "; 
                         else styleM += "text-teal-700 border-[1.5px] border-teal-500 border-b-0 ";
                     }
 
@@ -358,15 +463,15 @@
                         else styleT += "text-teal-700 border-[1.5px] border-teal-500 border-t-0 ";
                     }
 
-                    let midLine = `<div class="h-[1px] bg-teal-100 mx-1"></div>`;
+                    let midLine = `<div class="h-[1px] bg-teal-100 w-[90%] mx-auto"></div>`;
                     if (isTallerM && isTallerT) {
-                        midLine = `<div class="h-[2px] bg-[#f59e0b] mx-1"></div>`; // Línea de separación taller visible
+                        midLine = `<div class="h-[2.5px] bg-[#f59e0b] w-full"></div>`; 
                     } else if (isResM && isResT) {
-                        midLine = `<div class="h-[1px] bg-[#2b0000]"></div>`; // Línea casi negra reserva
+                        midLine = `<div class="h-[1.5px] bg-[#2b0000] w-[95%] mx-auto"></div>`; 
                     }
 
                     colHtml += `
-                        <div class="h-[4.7rem] w-full max-w-[34px] flex flex-col py-[5px]">
+                        <div class="h-[4.7rem] w-full px-0.5 py-[5px] flex flex-col">
                             <button class="slot-btn flex-1 flex items-center justify-center font-bold text-[10px] transition-colors ${styleM}" onclick="${clickM}">M</button>
                             ${midLine}
                             <button class="slot-btn flex-1 flex items-center justify-center font-bold text-[10px] transition-colors ${styleT}" onclick="${clickT}">T</button>
@@ -379,20 +484,27 @@
             document.getElementById('calendar-grid').innerHTML = gridHtml;
             
             if(!window.haCentradoHoy) {
-                setTimeout(() => {
-                    irAHoy();
-                    window.haCentradoHoy = true;
-                }, 100);
+                setTimeout(() => { irAHoy(); window.haCentradoHoy = true; }, 100);
             }
         }
 
-        function scrollSieteDias(direccion) { document.getElementById('scroll-container').scrollBy({ left: direccion * 42 * 7, behavior: 'smooth' }); }
+        // Modificamos el scroll de botones para que avance exactamente el ancho visible
+        function scrollSieteDias(direccion) { 
+            const container = document.getElementById('scroll-container');
+            // Desplazamos el 100% del ancho visible del contenedor (equivale a las 7 columnas que caben)
+            const widthToScroll = container.clientWidth;
+            container.scrollBy({ left: direccion * widthToScroll, behavior: 'smooth' }); 
+        }
+        
         function cerrarModal(id) { document.getElementById(id).classList.add('hidden'); }
 
         let reservaPendiente = null;
-        function abrirReservaNormal(cocheId, cocheAlias, fechaISO, turno, fechaTexto) {
+        function abrirReservaNormal(cocheId, fechaISO, turno, fechaTexto) {
             reservaPendiente = { coche: cocheId, fecha: fechaISO, turno, id: `${cocheId}_${fechaISO}_${turno}` };
-            document.getElementById('modalCoche').innerHTML = cocheAlias;
+            
+            // Llenar datos visuales del modal
+            document.getElementById('modalCocheName').innerText = getAliasForCoche(cocheId);
+            document.getElementById('modalCocheImg').src = getImgForCoche(cocheId);
             document.getElementById('modalFecha').innerText = fechaTexto;
             document.getElementById('modalTurno').innerText = turno;
             
@@ -407,7 +519,7 @@
             
             if (resObj && resObj.nombre !== "") {
                 document.getElementById('modalTitle').innerText = "Editar Reserva";
-                document.getElementById('modalTitle').className = "text-xl font-bold text-[#c2410c]";
+                document.getElementById('modalTitle').className = "text-xl font-bold text-[#901a1e]"; // Color granate
                 input.value = resObj.nombre;
             } else {
                 document.getElementById('modalTitle').innerText = "Nueva Reserva";
@@ -439,9 +551,11 @@
             return text.replace(phoneRegex, match => `<a href="tel:${match.replace(/\s+/g, '')}" class="text-blue-600 underline font-bold" onclick="event.stopPropagation()">${match}</a>`);
         }
 
-        function mostrarDatosCoche(cocheId, cocheAlias) {
+        function mostrarDatosCoche(cocheId) {
             currentCocheIdForTaller = cocheId; 
-            document.getElementById('infoCocheTitle').innerHTML = cocheAlias.replace('<br>', ' ');
+            document.getElementById('infoCocheTitle').innerText = getAliasForCoche(cocheId);
+            document.getElementById('infoCocheImg').src = getImgForCoche(cocheId);
+            
             isEditModeInfo = false; 
             renderInfoCocheContent();
             document.getElementById('infoCocheModal').classList.remove('hidden');
@@ -507,7 +621,7 @@
 
         function abrirTallerModal() {
             cerrarModal('infoCocheModal');
-            document.getElementById('tallerCocheName').innerText = currentCocheIdForTaller;
+            document.getElementById('tallerCocheNameText').innerText = getAliasForCoche(currentCocheIdForTaller);
             
             const hoyIso = new Date().toISOString().split('T')[0];
             let slotsTaller = [];
