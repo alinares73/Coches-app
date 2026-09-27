@@ -36,27 +36,20 @@
 
     <div class="w-full max-w-md bg-white h-screen shadow-2xl relative flex flex-col overflow-hidden">
         
-        <!-- CABECERA CON IMAGEN RECORTADA -->
-        <header class="relative shrink-0 w-full bg-white shadow-sm z-30">
-            <!-- Imagen Hero recortada (se enfoca en el coche, cortando arriba y abajo) -->
+        <!-- CABECERA CON IMAGEN RECORTADA Y BOTÓN FLOTANTE -->
+        <header class="relative shrink-0 w-full z-30">
+            <!-- Imagen Hero recortada -->
             <div class="w-full h-[150px] relative overflow-hidden bg-gray-100">
                 <img src="27989.jpg" alt="Portada" class="w-full h-[220px] object-cover object-[center_60%] absolute top-[-35px]">
-                <!-- Degradado suave inferior para fusionar con el fondo -->
+                <!-- Degradado suave inferior para fusionar con la tabla -->
                 <div class="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white to-transparent"></div>
             </div>
             
-            <!-- Barra de Título y Sincronización -->
-            <div class="flex items-center justify-between px-4 py-2 border-b border-gray-100">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-car-side text-xl text-teal-800 opacity-90"></i>
-                    <h1 class="text-lg font-black tracking-wider text-teal-900">COCHES</h1>
-                </div>
-                <!-- Botón Sincronizar discreto -->
-                <button onclick="cargarDatos(true)" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 hover:bg-gray-100 border border-gray-200 transition relative active:scale-95 shadow-sm">
-                    <i id="sync-icon" class="fas fa-sync-alt text-teal-700 text-xs"></i>
-                    <div id="sync-loader" class="loader absolute hidden border-gray-200 border-t-teal-700 border-[3px] w-4 h-4"></div>
-                </button>
-            </div>
+            <!-- Botón Sincronizar FLOTANTE SOBRE LA IMAGEN -->
+            <button onclick="cargarDatos(true)" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/70 backdrop-blur-md hover:bg-white border border-white/50 transition active:scale-95 shadow-md z-40">
+                <i id="sync-icon" class="fas fa-sync-alt text-teal-800 text-sm"></i>
+                <div id="sync-loader" class="loader absolute hidden border-gray-200 border-t-teal-800 border-[3px] w-4 h-4"></div>
+            </button>
         </header>
 
         <!-- CONTENEDOR PRINCIPAL (Tabla) -->
@@ -65,7 +58,7 @@
             <!-- Zona Superior: Coches Fijos Izq + Días Deslizables Der -->
             <div class="flex-1 flex w-full relative bg-white shadow-sm">
                 
-                <!-- COLUMNA FIJA IZQUIERDA (Imágenes Coches Grandes) -->
+                <!-- COLUMNA FIJA IZQUIERDA (Imágenes Coches al 100%) -->
                 <div class="w-[86px] flex-shrink-0 flex flex-col bg-white border-r border-gray-200 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                     <div class="h-[52px] w-full border-b border-gray-200 bg-gray-50"></div>
                     <div id="fixed-cars-col" class="flex flex-col"></div>
@@ -136,8 +129,8 @@
             </div>
 
             <div class="mb-5 text-gray-700 bg-gray-50 p-3 rounded-lg text-sm flex items-center">
-                <div class="w-16 h-10 mr-3 bg-white rounded border border-gray-200 p-1 flex justify-center items-center overflow-hidden">
-                    <img id="modalCocheImg" src="" alt="Coche" class="w-full h-full object-contain mix-blend-multiply scale-110">
+                <div class="w-16 h-10 mr-3 bg-white rounded flex justify-center items-center overflow-hidden mix-blend-multiply">
+                    <img id="modalCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-110">
                 </div>
                 <div>
                     <p><strong id="modalCocheName"></strong></p>
@@ -157,8 +150,8 @@
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl max-h-[90vh] flex flex-col">
             
             <div class="relative flex flex-col items-center justify-center mb-2 border-b border-gray-100 pb-3">
-                <div class="w-32 h-20 bg-white rounded-lg border border-gray-200 p-1 flex items-center justify-center mb-2 shadow-sm overflow-hidden">
-                    <img id="infoCocheImg" src="" alt="Coche" class="w-full h-full object-contain mix-blend-multiply scale-110">
+                <div class="w-32 h-20 bg-white rounded-lg p-1 flex items-center justify-center mb-2 overflow-hidden mix-blend-multiply">
+                    <img id="infoCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-110">
                 </div>
                 <h3 class="text-lg font-bold text-gray-800 text-center" id="infoCocheTitle">Datos Vehículo</h3>
                 
@@ -366,13 +359,13 @@
         function renderApp() {
             const todayStr = new Date().toDateString();
             
-            // CELDAS FIJAS: IMÁGENES AL 100% CON ZOOM INTERNO (Scale-115)
+            // IMÁGENES AL 100% SIN GLOBO
             let fixedHtml = "";
             coches.forEach(coche => {
                 fixedHtml += `
-                    <div class="flex items-center justify-center py-1 h-[5.5rem] border-b border-gray-100 last:border-b-0 w-full px-2">
-                        <button onclick="mostrarDatosCoche('${coche.id}')" class="w-full h-full rounded-xl bg-white shadow-sm border border-gray-200 overflow-hidden active:scale-95 transition flex items-center justify-center">
-                            <img src="${coche.img}" alt="${coche.alias}" class="w-full h-full object-contain mix-blend-multiply scale-110" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23eee\\'/></svg>'">
+                    <div class="flex items-center justify-center h-[5.5rem] border-b border-gray-100 last:border-b-0 w-full overflow-hidden relative">
+                        <button onclick="mostrarDatosCoche('${coche.id}')" class="w-full h-full bg-white active:bg-gray-50 transition flex items-center justify-center focus:outline-none">
+                            <img src="${coche.img}" alt="${coche.alias}" class="w-full h-[120%] object-contain mix-blend-multiply scale-110" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23eee\\'/></svg>'">
                         </button>
                     </div>`;
             });
