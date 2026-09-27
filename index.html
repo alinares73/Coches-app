@@ -13,7 +13,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        /* Bloqueo total del rebote del navegador (Anti-bounce nativo) */
+        /* Bloqueo total del rebote del navegador */
         html, body { 
             width: 100%; height: 100%; margin: 0; padding: 0;
             overflow: hidden; position: fixed; 
@@ -21,51 +21,40 @@
             background-color: #f3f4f6; 
         }
         
-        .slot-btn:active, .fab-btn:active, .nav-btn:active { transform: scale(0.92); }
+        .slot-btn:active, .fab-btn:active, .nav-btn:active, .cal-btn:active { transform: scale(0.92); }
         
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #0f766e; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* SCROLL 2D FLUIDO Y OCULTO */
-        #scroll-container {
-            overflow: auto; scroll-behavior: smooth;
-            -ms-overflow-style: none; scrollbar-width: none;
-        }
+        #scroll-container { overflow: auto; scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none; }
         #scroll-container::-webkit-scrollbar { display: none; }
         
-        /* Ajuste Responsive Inteligente: 7 columnas exactas sea cual sea el ancho de la pantalla */
+        /* Ajuste Responsive Inteligente: 7 columnas */
         .day-col { 
-            /* Esto garantiza que cada columna mida exactamente 1/7 del espacio disponible */
             flex: 0 0 calc((min(100vw, 56rem) - 86px) / 7); 
             display: flex; flex-direction: column; align-items: center; border-right: 1px solid #f3f4f6; 
         }
         .day-col:last-child { border-right: none; }
 
-        /* Estilo para los botones de coche sin globo, ocupando el 100% */
+        /* Estilo para los botones de coche sin globo */
         .car-image-btn {
             width: 100%; height: 100%;
-            background-color: white;
-            display: flex; align-items: center; justify-content: center;
-            transition: transform 0.1s;
-            overflow: hidden; border-radius: 0.5rem;
+            background-color: white; display: flex; align-items: center; justify-content: center;
+            transition: transform 0.1s; overflow: hidden; border-radius: 0.5rem;
         }
         .car-image-btn img {
-            width: 100%; height: 100%;
-            object-fit: contain;
-            mix-blend-mode: multiply;
-            transform: scale(1.35); /* Zoom para recortar márgenes blancos origen */
+            width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; transform: scale(1.35); 
         }
     </style>
 </head>
 <body class="font-sans flex flex-col items-center justify-center">
 
-    <!-- Contenedor adaptativo -->
     <div class="w-full h-full max-w-4xl bg-white shadow-2xl relative flex flex-col overflow-hidden mx-auto">
         
         <!-- CABECERA HERO (FIJA) -->
         <header class="relative shrink-0 w-full z-40 bg-white shadow-sm">
             
-            <!-- Botón Sincronizar FLOTANTE SOBRE LA IMAGEN -->
             <button onclick="cargarDatos(true)" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/40 backdrop-blur-md hover:bg-white border border-white/50 transition active:scale-95 shadow-md z-50">
                 <i id="sync-icon" class="fas fa-sync-alt text-teal-900 text-sm"></i>
                 <div id="sync-loader" class="loader absolute hidden border-gray-200 border-t-teal-900 border-[3px] w-4 h-4"></div>
@@ -79,10 +68,7 @@
             
             <!-- Flechas Flotantes -->
             <div class="absolute bottom-0 w-full flex items-end z-50 px-1 pb-1 pointer-events-none">
-                <!-- Espaciador exacto para alinear la flecha con la cuadrícula (86px) -->
                 <div class="w-[86px] flex-shrink-0"></div>
-                
-                <!-- Controles -->
                 <div class="flex-1 flex justify-between items-center px-1 pointer-events-auto">
                     <button onclick="scrollSieteDias(-1)" class="nav-btn w-9 h-9 flex items-center justify-center text-teal-800 bg-white/60 hover:bg-white backdrop-blur shadow-sm rounded-full transition border border-white/60">
                         <i class="fas fa-chevron-left"></i>
@@ -97,47 +83,36 @@
 
         <!-- CONTENEDOR PRINCIPAL SCROLL HORIZONTAL NATIVO -->
         <main id="scroll-container" class="flex-1 w-full relative z-20 bg-white overflow-auto pb-36"> 
-            
-            <!-- IMPORTANTE: flex y w-max para que los 60 días quepan estirados hacia la derecha -->
             <div class="flex w-max min-w-full">
                 
-                <!-- COLUMNA FIJA IZQUIERDA (Sticky Horizontal) -->
                 <div class="w-[86px] flex-shrink-0 flex flex-col bg-white border-r border-gray-200 sticky left-0 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                     <div class="h-12 w-full border-b border-gray-200 bg-gray-50 sticky top-0 z-40"></div>
                     <div id="fixed-cars-col" class="flex flex-col"></div>
                 </div>
 
-                <!-- ÁREA DESLIZABLE (60 días hacia la derecha) -->
                 <div id="calendar-grid" class="flex"></div>
                 
             </div>
         </main>
 
-        <!-- AVISO DE CARGA FLOTANTE -->
         <div id="floating-loader" class="fixed bottom-[96px] right-6 bg-gray-800 text-white px-4 py-2.5 rounded-full shadow-lg flex items-center justify-center text-xs font-semibold transition-opacity duration-300 z-50 opacity-0 hidden pointer-events-none border border-gray-700">
             <i class="fas fa-spinner fa-spin mr-2 text-teal-400 text-sm"></i> Cargando...
         </div>
 
-        <!-- BOTONES FLOTANTES INFERIORES -->
         <div class="fixed bottom-6 left-0 w-full px-6 flex justify-between items-end z-50 pointer-events-none max-w-4xl mx-auto">
-            
-            <!-- BOTÓN HOY (Izquierda) -->
             <button onclick="irAHoy()" class="fab-btn pointer-events-auto bg-white text-teal-700 font-black px-5 py-3.5 rounded-full shadow-[0_8px_15px_rgba(0,0,0,0.15)] flex items-center justify-center hover:bg-gray-50 transition border border-gray-200">
                 HOY
             </button>
-
-            <!-- BOTÓN AÑADIR VIAJE (Derecha) -->
             <button onclick="abrirViajeModal()" class="fab-btn pointer-events-auto bg-teal-700 text-white px-6 py-3.5 rounded-full shadow-[0_8px_15px_rgba(15,118,110,0.3)] flex items-center justify-center hover:bg-teal-800 transition border-2 border-white/20">
                 <i class="fas fa-route text-lg mr-2"></i>
                 <span class="text-sm font-bold uppercase tracking-widest">Viaje</span>
             </button>
-            
         </div>
     </div>
 
     <!-- === MODALES === -->
 
-    <!-- MODAL RESERVA -->
+    <!-- MODAL RESERVA NORMAL -->
     <div id="reservaModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-4 border-b pb-2 border-gray-100">
@@ -170,13 +145,11 @@
     <!-- MODAL DATOS COCHE -->
     <div id="infoCocheModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl max-h-[90vh] flex flex-col">
-            
             <div class="relative flex flex-col items-center justify-center mb-2 border-b border-gray-100 pb-3">
                 <div class="w-32 h-20 bg-white rounded-lg p-1 flex items-center justify-center mb-2 overflow-hidden mix-blend-multiply border border-gray-200 shadow-sm">
                     <img id="infoCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-[1.35]">
                 </div>
                 <h3 class="text-lg font-bold text-gray-800 text-center uppercase tracking-wider" id="infoCocheTitle">Datos Vehículo</h3>
-                
                 <button id="btnConfigCoche" onclick="toggleEditCoche()" class="absolute right-0 top-0 text-gray-400 hover:text-teal-600 text-xl transition p-2">
                     <i class="fas fa-cog"></i>
                 </button>
@@ -193,35 +166,53 @@
         </div>
     </div>
 
-    <!-- MODAL VIAJE -->
+    <!-- MODAL VIAJE CON CALENDARIO INTEGRADO -->
     <div id="viajeModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
-            <div class="flex justify-between items-center mb-3 border-b pb-2 border-gray-100">
-                <h2 class="text-xl font-bold text-teal-800"><i class="fas fa-route mr-2"></i>Añadir Viaje</h2>
+        <div class="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl max-h-[95vh] flex flex-col overflow-y-auto">
+            <div class="flex justify-between items-center mb-2 border-b pb-2 border-gray-100 shrink-0">
+                <h2 class="text-lg font-bold text-teal-800"><i class="fas fa-route mr-2"></i>Añadir Viaje</h2>
                 <button onclick="cerrarModal('viajeModal')" class="text-gray-400 text-2xl">&times;</button>
             </div>
-            <form onsubmit="enviarViaje(event)">
-                <div class="mb-3">
-                    <label class="text-xs font-bold text-gray-500 uppercase">Coche</label>
-                    <select id="viajeCoche" class="w-full border border-gray-300 p-2 rounded-lg bg-white mt-1 font-medium"></select>
-                </div>
-                <div class="mb-3">
-                    <label class="text-xs font-bold text-gray-500 uppercase">Nombre / Conductor</label>
-                    <input type="text" id="viajeNombre" required class="w-full border border-gray-300 p-2 rounded-lg mt-1">
-                </div>
-                <div class="flex gap-2 mb-3">
-                    <div class="w-1/2">
-                        <label class="text-xs font-bold text-gray-500 uppercase">Inicio</label>
-                        <input type="date" id="viajeFechaIn" required class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm">
-                        <select id="viajeTurnoIn" class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm"><option>Mañana</option><option>Tarde</option></select>
+            <form onsubmit="enviarViaje(event)" class="flex flex-col gap-2">
+                <div class="flex gap-2">
+                    <div class="w-1/3">
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Coche</label>
+                        <select id="viajeCoche" class="w-full border border-gray-300 p-1.5 rounded-lg bg-white mt-0.5 text-sm font-medium"></select>
                     </div>
-                    <div class="w-1/2">
-                        <label class="text-xs font-bold text-gray-500 uppercase">Fin</label>
-                        <input type="date" id="viajeFechaFin" required class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm">
-                        <select id="viajeTurnoFin" class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm"><option>Mañana</option><option>Tarde</option></select>
+                    <div class="w-2/3">
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Nombre / Conductor</label>
+                        <input type="text" id="viajeNombre" required class="w-full border border-gray-300 p-1.5 rounded-lg mt-0.5 text-sm">
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mt-2 flex justify-center items-center shadow-md">Guardar Viaje</button>
+
+                <!-- CALENDARIO INTERACTIVO (RANGO DE FECHAS) -->
+                <div class="mt-1 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm shrink-0">
+                    <div class="flex justify-between items-center bg-gray-50 px-2 py-1.5 border-b border-gray-100">
+                        <button type="button" onclick="cambiarMesViaje(-1)" class="w-7 h-7 flex items-center justify-center text-teal-700 hover:bg-gray-200 rounded-full transition"><i class="fas fa-chevron-left text-xs"></i></button>
+                        <span id="calMesAnno" class="text-[11px] font-bold text-gray-700 uppercase tracking-wide">...</span>
+                        <button type="button" onclick="cambiarMesViaje(1)" class="w-7 h-7 flex items-center justify-center text-teal-700 hover:bg-gray-200 rounded-full transition"><i class="fas fa-chevron-right text-xs"></i></button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-0 text-center text-[9px] font-bold text-gray-400 bg-gray-50 py-1 border-b border-gray-100">
+                        <div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div>
+                    </div>
+                    <div id="calGrid" class="grid grid-cols-7 gap-y-1 text-center text-xs p-1 pb-1.5 bg-white min-h-[140px]"></div>
+                    <div class="bg-teal-50/50 py-1.5 border-t border-teal-100 text-center text-[11px] font-bold text-teal-800 flex justify-center items-center">
+                        <i class="far fa-calendar-check mr-2"></i> <span id="viajeFechasVisual">--/--/----  ➡️  --/--/----</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <div class="w-1/2">
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Turno Inicio</label>
+                        <select id="viajeTurnoIn" class="w-full border border-gray-300 p-1.5 rounded-lg mt-0.5 text-sm"><option>Mañana</option><option>Tarde</option></select>
+                    </div>
+                    <div class="w-1/2">
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Turno Fin</label>
+                        <select id="viajeTurnoFin" class="w-full border border-gray-300 p-1.5 rounded-lg mt-0.5 text-sm"><option>Mañana</option><option>Tarde</option></select>
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold py-2.5 rounded-xl mt-1 flex justify-center items-center shadow-md transition">Guardar Viaje</button>
             </form>
         </div>
     </div>
@@ -281,7 +272,7 @@
         let currentCocheIdForTaller = "";
         let isEditModeInfo = false; 
         
-        // Array de 60 días para permitir un buen deslizamiento horizontal
+        // Carga de la cuadrícula general de 60 días
         let arrayFechas = [];
         let baseDate = new Date();
         baseDate.setHours(0,0,0,0);
@@ -297,18 +288,12 @@
             coches.forEach(c => selectCoche.innerHTML += `<option value="${c.id}">${c.alias}</option>`);
             
             const hoyIso = new Date().toISOString().split('T')[0];
-            document.getElementById('viajeFechaIn').value = hoyIso;
-            document.getElementById('viajeFechaFin').value = hoyIso;
             document.getElementById('tallerFechaIn').value = hoyIso;
             document.getElementById('tallerFechaFin').value = hoyIso;
             
             const cache = localStorage.getItem('cochesDataCache');
-            if (cache) { 
-                procesarDatos(JSON.parse(cache)); 
-                cargarDatos(true); 
-            } else { 
-                cargarDatos(true); 
-            }
+            if (cache) { procesarDatos(JSON.parse(cache)); cargarDatos(true); } 
+            else { cargarDatos(true); }
         });
 
         document.addEventListener('visibilitychange', () => {
@@ -323,7 +308,6 @@
             if (mostrarLoader) {
                 floatLoader.classList.remove('hidden');
                 setTimeout(() => floatLoader.classList.remove('opacity-0'), 10);
-                
                 syncIcon.classList.add('hidden');
                 syncLoader.classList.remove('hidden');
             }
@@ -379,14 +363,13 @@
 
         function scrollSieteDias(direccion) { 
             const container = document.getElementById('scroll-container');
-            const colWidth = container.clientWidth - 86; // Ancho visible de las 7 columnas
+            const colWidth = container.clientWidth - 86; 
             container.scrollBy({ left: direccion * colWidth, behavior: 'smooth' }); 
         }
 
         function renderApp() {
             const todayStr = new Date().toDateString();
             
-            // COLUMNA FIJA: IMÁGENES AL 100%
             let fixedHtml = "";
             coches.forEach(coche => {
                 fixedHtml += `
@@ -398,7 +381,6 @@
             });
             document.getElementById('fixed-cars-col').innerHTML = fixedHtml;
 
-            // CALENDARIO DESLIZABLE (60 Días horizontales)
             let gridHtml = "";
             arrayFechas.forEach((fechaObj, index) => {
                 const isToday = fechaObj.toDateString() === todayStr;
@@ -526,6 +508,160 @@
             }).then(() => { cargarDatos(false); });
         }
 
+
+        // ==========================================
+        // LÓGICA DEL CALENDARIO DE VIAJES
+        // ==========================================
+        let viajeCalDate = new Date();
+        let viajeStart = null;
+        let viajeEnd = null;
+
+        function abrirViajeModal() { 
+            // Inicia siempre marcando HOY como principio y fin del viaje por defecto
+            viajeStart = new Date(); viajeStart.setHours(0,0,0,0);
+            viajeEnd = new Date(viajeStart);
+            viajeCalDate = new Date(viajeStart);
+            renderViajeCal();
+            document.getElementById('viajeModal').classList.remove('hidden'); 
+        }
+
+        function cambiarMesViaje(dir) {
+            viajeCalDate.setMonth(viajeCalDate.getMonth() + dir);
+            renderViajeCal();
+        }
+
+        function selectViajeDate(dateStr) {
+            const d = new Date(dateStr);
+            d.setHours(0,0,0,0);
+
+            if (viajeStart && viajeEnd && viajeStart.getTime() !== viajeEnd.getTime()) {
+                // Hay un rango completo marcado. Si tocas, empezamos un rango nuevo con 1 día.
+                viajeStart = d;
+                viajeEnd = d;
+            } else if (viajeStart && viajeEnd && viajeStart.getTime() === viajeEnd.getTime()) {
+                // Hay 1 solo día marcado. Completamos el rango.
+                if (d < viajeStart) {
+                    viajeStart = d;
+                    viajeEnd = d; // Resetea hacia atrás
+                } else {
+                    viajeEnd = d; // Cierra el rango
+                }
+            } else {
+                viajeStart = d;
+                viajeEnd = d;
+            }
+            renderViajeCal();
+        }
+
+        function renderViajeCal() {
+            const y = viajeCalDate.getFullYear();
+            const m = viajeCalDate.getMonth();
+            const firstDay = new Date(y, m, 1).getDay();
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+
+            const mesNombres = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            document.getElementById('calMesAnno').innerText = `${mesNombres[m]} ${y}`;
+
+            let html = '';
+            for (let i = 0; i < startOffset; i++) { html += `<div></div>`; }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const currentD = new Date(y, m, d);
+                // Prevenir problemas de timezone al generar string ISO
+                const ts = currentD.getTime();
+                const dateStr = new Date(ts - (currentD.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                
+                const startTs = viajeStart ? viajeStart.getTime() : null;
+                const endTs = viajeEnd ? viajeEnd.getTime() : null;
+
+                let isStart = startTs === ts;
+                let isEnd = endTs === ts;
+                let inRange = startTs && endTs && ts > startTs && ts < endTs;
+                let isToday = new Date().toDateString() === currentD.toDateString();
+
+                let wrapperClass = "relative flex justify-center items-center h-7";
+                let innerClass = "w-6 h-6 flex items-center justify-center rounded-full z-10 cursor-pointer text-gray-700 hover:bg-gray-200 transition-colors cal-btn";
+                
+                if (inRange) {
+                    wrapperClass += " bg-teal-50";
+                    innerClass = "w-full h-full rounded-none hover:bg-teal-100 text-teal-800 font-bold";
+                } 
+                
+                if (isStart && isEnd) {
+                    innerClass = "w-6 h-6 bg-teal-600 text-white font-bold shadow-md";
+                } else if (isStart) {
+                    wrapperClass += " bg-gradient-to-r from-transparent to-teal-50";
+                    innerClass = "w-6 h-6 bg-teal-600 text-white font-bold shadow-md";
+                } else if (isEnd) {
+                    wrapperClass += " bg-gradient-to-r from-teal-50 to-transparent";
+                    innerClass = "w-6 h-6 bg-teal-600 text-white font-bold shadow-md";
+                } else if (!inRange && isToday) {
+                    innerClass += " border border-teal-400 font-bold text-teal-600";
+                }
+
+                html += `
+                <div class="${wrapperClass}" onclick="selectViajeDate('${dateStr}')">
+                    <div class="${innerClass}">${d}</div>
+                </div>`;
+            }
+            document.getElementById('calGrid').innerHTML = html;
+
+            const fmt = d => d ? `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}` : '--/--/----';
+            document.getElementById('viajeFechasVisual').innerText = `${fmt(viajeStart)}  ➡️  ${fmt(viajeEnd)}`;
+        }
+
+        function enviarViaje(e) {
+            e.preventDefault();
+            
+            if (!viajeStart || !viajeEnd) {
+                alert("Por favor, selecciona las fechas en el calendario.");
+                return;
+            }
+
+            const tIn = document.getElementById('viajeTurnoIn').value;
+            const tFin = document.getElementById('viajeTurnoFin').value;
+            const coche = document.getElementById('viajeCoche').value; 
+            const nombre = document.getElementById('viajeNombre').value;
+            
+            let startD = new Date(viajeStart); 
+            let endD = new Date(viajeEnd);
+            let payloadArr = [];
+            
+            for(let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+                let fStr = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                if (d.getTime() === startD.getTime() && d.getTime() === endD.getTime()) {
+                    if (tIn === "Tarde" && tFin === "Mañana") { } 
+                    else if (tIn === "Mañana" && tFin === "Tarde") { payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre}); }
+                    else { payloadArr.push({fecha:fStr, turno:tIn, coche, nombre}); }
+                } else if (d.getTime() === startD.getTime()) {
+                    if (tIn === "Mañana") { payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre}); }
+                    else { payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre}); }
+                } else if (d.getTime() === endD.getTime()) {
+                    if (tFin === "Mañana") { payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); }
+                    else { payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre}); }
+                } else {
+                    payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre});
+                }
+            }
+
+            payloadArr.forEach(p => {
+                let key = `${p.coche}_${p.fecha}_${p.turno}`;
+                let actual = reservasActivas.get(key) || { taller: false, observacion: "" };
+                actual.nombre = p.nombre;
+                reservasActivas.set(key, actual);
+            });
+            renderApp();
+            cerrarModal('viajeModal');
+            document.getElementById('viajeNombre').value = '';
+
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payloadArr) })
+            .then(() => { cargarDatos(false); });
+        }
+
+        // ==========================================
+        // RESTO DE FUNCIONES (Taller, Ajustes, etc.)
+        // ==========================================
         function formatPhone(text) {
             const phoneRegex = /\b(?:(?:\+|00)34[\s.-]?)?[6789](?:[\s.-]?\d){8}\b/g;
             return text.replace(phoneRegex, match => `<a href="tel:${match.replace(/\s+/g, '')}" class="text-blue-600 underline font-bold" onclick="event.stopPropagation()">${match}</a>`);
@@ -696,48 +832,6 @@
 
             const payload = { action: "borrar_taller", coche: currentCocheIdForTaller, fechaHoy: hoyIso };
             fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            .then(() => { cargarDatos(false); });
-        }
-
-        function abrirViajeModal() { document.getElementById('viajeModal').classList.remove('hidden'); }
-        
-        function enviarViaje(e) {
-            e.preventDefault();
-            const fIn = document.getElementById('viajeFechaIn').value; const tIn = document.getElementById('viajeTurnoIn').value;
-            const fFin = document.getElementById('viajeFechaFin').value; const tFin = document.getElementById('viajeTurnoFin').value;
-            const coche = document.getElementById('viajeCoche').value; const nombre = document.getElementById('viajeNombre').value;
-            
-            let startD = new Date(fIn); let endD = new Date(fFin);
-            let payloadArr = [];
-            
-            for(let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
-                let fStr = d.toISOString().split('T')[0];
-                if (d.getTime() === startD.getTime() && d.getTime() === endD.getTime()) {
-                    if (tIn === "Tarde" && tFin === "Mañana") { } 
-                    else if (tIn === "Mañana" && tFin === "Tarde") { payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre}); }
-                    else { payloadArr.push({fecha:fStr, turno:tIn, coche, nombre}); }
-                } else if (d.getTime() === startD.getTime()) {
-                    if (tIn === "Mañana") { payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre}); }
-                    else { payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre}); }
-                } else if (d.getTime() === endD.getTime()) {
-                    if (tFin === "Mañana") { payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); }
-                    else { payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre}); }
-                } else {
-                    payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre});
-                }
-            }
-
-            payloadArr.forEach(p => {
-                let key = `${p.coche}_${p.fecha}_${p.turno}`;
-                let actual = reservasActivas.get(key) || { taller: false, observacion: "" };
-                actual.nombre = p.nombre;
-                reservasActivas.set(key, actual);
-            });
-            renderApp();
-            cerrarModal('viajeModal');
-            document.getElementById('viajeNombre').value = '';
-
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payloadArr) })
             .then(() => { cargarDatos(false); });
         }
 
