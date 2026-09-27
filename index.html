@@ -13,7 +13,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        /* Bloqueo total del rebote del navegador */
+        /* Bloqueo total del rebote del navegador (Anti-bounce nativo) */
         html, body { 
             width: 100%; height: 100%; margin: 0; padding: 0;
             overflow: hidden; position: fixed; 
@@ -27,10 +27,13 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* SCROLL 2D FLUIDO Y OCULTO */
-        #scroll-container { overflow: auto; scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none; }
+        #scroll-container {
+            overflow: auto; scroll-behavior: smooth;
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
         #scroll-container::-webkit-scrollbar { display: none; }
         
-        /* Ajuste Responsive Inteligente: 7 columnas */
+        /* Ajuste Responsive Inteligente: 7 columnas exactas */
         .day-col { 
             flex: 0 0 calc((min(100vw, 56rem) - 86px) / 7); 
             display: flex; flex-direction: column; align-items: center; border-right: 1px solid #f3f4f6; 
@@ -44,7 +47,9 @@
             transition: transform 0.1s; overflow: hidden; border-radius: 0.5rem;
         }
         .car-image-btn img {
-            width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; transform: scale(1.35); 
+            width: 100%; height: 100%;
+            object-fit: contain; mix-blend-mode: multiply;
+            transform: scale(1.35); /* Zoom para recortar márgenes blancos origen */
         }
     </style>
 </head>
@@ -60,13 +65,11 @@
                 <div id="sync-loader" class="loader absolute hidden border-gray-200 border-t-teal-900 border-[3px] w-4 h-4"></div>
             </button>
 
-            <!-- Imagen Portada -->
             <div class="w-full h-[180px] md:h-[240px] relative overflow-hidden bg-[#0c2f2b]">
                 <img src="27989.jpg" alt="Portada" class="w-full h-[240px] md:h-[300px] object-cover object-[center_60%] absolute top-[-30px] md:top-[-45px] scale-105">
                 <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none"></div>
             </div>
             
-            <!-- Flechas Flotantes -->
             <div class="absolute bottom-0 w-full flex items-end z-50 px-1 pb-1 pointer-events-none">
                 <div class="w-[86px] flex-shrink-0"></div>
                 <div class="flex-1 flex justify-between items-center px-1 pointer-events-auto">
@@ -84,14 +87,11 @@
         <!-- CONTENEDOR PRINCIPAL SCROLL HORIZONTAL NATIVO -->
         <main id="scroll-container" class="flex-1 w-full relative z-20 bg-white overflow-auto pb-36"> 
             <div class="flex w-max min-w-full">
-                
                 <div class="w-[86px] flex-shrink-0 flex flex-col bg-white border-r border-gray-200 sticky left-0 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                     <div class="h-12 w-full border-b border-gray-200 bg-gray-50 sticky top-0 z-40"></div>
                     <div id="fixed-cars-col" class="flex flex-col"></div>
                 </div>
-
                 <div id="calendar-grid" class="flex"></div>
-                
             </div>
         </main>
 
@@ -112,19 +112,17 @@
 
     <!-- === MODALES === -->
 
-    <!-- MODAL RESERVA NORMAL -->
+    <!-- MODAL RESERVA -->
     <div id="reservaModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-4 border-b pb-2 border-gray-100">
                 <h2 id="modalTitle" class="text-xl font-bold text-teal-800">Reserva</h2>
                 <button onclick="cerrarModal('reservaModal')" class="text-gray-400 text-2xl">&times;</button>
             </div>
-            
             <div id="avisoTallerBox" class="hidden mb-4 bg-amber-50 border-l-4 border-amber-700 p-3 rounded-lg text-sm text-amber-900">
                 <strong class="flex items-center mb-1"><i class="fas fa-tools mr-2 text-amber-700"></i> Observación de Taller</strong>
                 <p id="avisoTallerText" class="italic"></p>
             </div>
-
             <div class="mb-5 text-gray-700 bg-gray-50 p-3 rounded-lg text-sm flex items-center">
                 <div class="w-20 h-12 mr-3 bg-white rounded flex justify-center items-center overflow-hidden mix-blend-multiply border border-gray-200 p-1 shadow-sm">
                     <img id="modalCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-[1.35]">
@@ -137,7 +135,7 @@
             <form id="formReserva" onsubmit="enviarReservaNormal(event)">
                 <input type="text" id="inputNombre" placeholder="Tu Nombre o Horario..." class="w-full mb-2 border-2 border-gray-200 rounded-xl p-3 text-lg focus:border-teal-600 focus:outline-none">
                 <p class="text-[11px] text-gray-500 mb-4">Déjalo en blanco para eliminar la reserva.</p>
-                <button type="submit" id="btnConfirmarReserva" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mb-2 flex justify-center items-center shadow-md">Guardar</button>
+                <button type="submit" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mb-2 flex justify-center items-center shadow-md">Guardar</button>
             </form>
         </div>
     </div>
@@ -154,9 +152,7 @@
                     <i class="fas fa-cog"></i>
                 </button>
             </div>
-            
             <div id="infoCocheContent" class="text-gray-600 text-sm bg-gray-50 p-3 rounded-xl border border-gray-100 flex-1 overflow-y-auto mb-4 mt-2"></div>
-            
             <div id="infoCocheActions">
                 <button onclick="abrirTallerModal()" class="w-full bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 font-bold py-3 rounded-xl transition flex items-center justify-center mb-2">
                     <i class="fas fa-tools mr-2"></i> Observación Taller
@@ -166,7 +162,7 @@
         </div>
     </div>
 
-    <!-- MODAL VIAJE CON CALENDARIO INTEGRADO -->
+    <!-- MODAL VIAJE (CON CALENDARIO INTERACTIVO) -->
     <div id="viajeModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl max-h-[95vh] flex flex-col overflow-y-auto">
             <div class="flex justify-between items-center mb-2 border-b pb-2 border-gray-100 shrink-0">
@@ -185,7 +181,7 @@
                     </div>
                 </div>
 
-                <!-- CALENDARIO INTERACTIVO (RANGO DE FECHAS) -->
+                <!-- CALENDARIO VISUAL INTERACTIVO -->
                 <div class="mt-1 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm shrink-0">
                     <div class="flex justify-between items-center bg-gray-50 px-2 py-1.5 border-b border-gray-100">
                         <button type="button" onclick="cambiarMesViaje(-1)" class="w-7 h-7 flex items-center justify-center text-teal-700 hover:bg-gray-200 rounded-full transition"><i class="fas fa-chevron-left text-xs"></i></button>
@@ -235,7 +231,8 @@
                 <div class="flex gap-2 mb-4">
                     <div class="w-1/2">
                         <label class="text-xs font-bold text-gray-500 uppercase">Inicio Espera</label>
-                        <input type="date" id="tallerFechaIn" required class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm focus:border-amber-500 focus:outline-none">
+                        <!-- Script onchange añadido para que la fecha fin se iguale sola -->
+                        <input type="date" id="tallerFechaIn" onchange="sincronizarFechaTaller()" required class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm focus:border-amber-500 focus:outline-none">
                         <select id="tallerTurnoIn" class="w-full border border-gray-300 p-2 rounded-lg mt-1 text-sm focus:border-amber-500 focus:outline-none"><option>Mañana</option><option>Tarde</option></select>
                     </div>
                     <div class="w-1/2">
@@ -271,8 +268,22 @@
         let infoCochesGlobal = {}; 
         let currentCocheIdForTaller = "";
         let isEditModeInfo = false; 
+
+        // ==========================================
+        // FUNCIONES CORE PARA EVITAR BUGS DE ZONA HORARIA
+        // ==========================================
+        function getLocalIsoString(dateObj) {
+            const pad = n => n < 10 ? '0' + n : n;
+            return dateObj.getFullYear() + '-' + pad(dateObj.getMonth() + 1) + '-' + pad(dateObj.getDate());
+        }
+
+        function parseLocalDate(dateStr) {
+            if(!dateStr) return new Date();
+            const parts = dateStr.split('-');
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+        // ==========================================
         
-        // Carga de la cuadrícula general de 60 días
         let arrayFechas = [];
         let baseDate = new Date();
         baseDate.setHours(0,0,0,0);
@@ -287,7 +298,7 @@
             const selectCoche = document.getElementById('viajeCoche');
             coches.forEach(c => selectCoche.innerHTML += `<option value="${c.id}">${c.alias}</option>`);
             
-            const hoyIso = new Date().toISOString().split('T')[0];
+            const hoyIso = getLocalIsoString(new Date());
             document.getElementById('tallerFechaIn').value = hoyIso;
             document.getElementById('tallerFechaFin').value = hoyIso;
             
@@ -350,8 +361,8 @@
         }
 
         function irAHoy() {
-            const todayStr = new Date().toDateString();
-            const todayIndex = arrayFechas.findIndex(d => d.toDateString() === todayStr);
+            const todayStr = getLocalIsoString(new Date());
+            const todayIndex = arrayFechas.findIndex(d => getLocalIsoString(d) === todayStr);
             if(todayIndex !== -1) {
                 const diaEl = document.getElementById(`dia-${todayIndex}`);
                 if (diaEl) {
@@ -368,12 +379,12 @@
         }
 
         function renderApp() {
-            const todayStr = new Date().toDateString();
+            const todayStr = getLocalIsoString(new Date());
             
             let fixedHtml = "";
             coches.forEach(coche => {
                 fixedHtml += `
-                    <div class="h-[6rem] border-b border-gray-200 last:border-b-0 w-full bg-white overflow-hidden p-0">
+                    <div class="h-[6rem] border-b border-gray-200 last:border-b-0 w-full bg-white overflow-hidden p-0 flex-shrink-0">
                         <button onclick="mostrarDatosCoche('${coche.id}')" class="car-image-btn active:scale-95 focus:outline-none">
                             <img src="${coche.img}" alt="${coche.alias}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23eee\\'/></svg>'">
                         </button>
@@ -383,8 +394,8 @@
 
             let gridHtml = "";
             arrayFechas.forEach((fechaObj, index) => {
-                const isToday = fechaObj.toDateString() === todayStr;
-                const fechaStr = new Date(fechaObj.getTime() - (fechaObj.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                const fechaStr = getLocalIsoString(fechaObj);
+                const isToday = fechaStr === todayStr;
                 
                 const bgClass = isToday ? 'bg-teal-50/40 border-teal-100' : 'bg-transparent border-gray-100';
                 const headerBg = isToday ? 'bg-teal-50' : 'bg-white';
@@ -392,7 +403,7 @@
                 
                 let colHtml = `
                 <div class="day-col ${bgClass}" id="dia-${index}">
-                    <div class="h-12 w-full flex flex-col items-center justify-center border-b border-gray-200 sticky top-0 z-30 ${headerBg}">
+                    <div class="h-12 w-full flex flex-col items-center justify-center border-b border-gray-200 sticky top-0 z-30 flex-shrink-0 ${headerBg}">
                         <span class="text-[9px] ${textClass} font-bold tracking-wider">${diasNombres[fechaObj.getDay()]}</span>
                         <span class="text-[13px] font-black ${textClass}">${fechaObj.getDate()}</span>
                     </div>`;
@@ -505,19 +516,18 @@
             fetch(SCRIPT_URL, { 
                 method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify([{ fecha: reservaPendiente.fecha, nombre: nombre, coche: reservaPendiente.coche, turno: reservaPendiente.turno }]) 
-            }).then(() => { cargarDatos(false); });
+            });
         }
 
 
         // ==========================================
-        // LÓGICA DEL CALENDARIO DE VIAJES
+        // CALENDARIO INTERACTIVO (VIAJES)
         // ==========================================
         let viajeCalDate = new Date();
         let viajeStart = null;
         let viajeEnd = null;
 
         function abrirViajeModal() { 
-            // Inicia siempre marcando HOY como principio y fin del viaje por defecto
             viajeStart = new Date(); viajeStart.setHours(0,0,0,0);
             viajeEnd = new Date(viajeStart);
             viajeCalDate = new Date(viajeStart);
@@ -531,24 +541,14 @@
         }
 
         function selectViajeDate(dateStr) {
-            const d = new Date(dateStr);
-            d.setHours(0,0,0,0);
-
+            const d = parseLocalDate(dateStr);
             if (viajeStart && viajeEnd && viajeStart.getTime() !== viajeEnd.getTime()) {
-                // Hay un rango completo marcado. Si tocas, empezamos un rango nuevo con 1 día.
-                viajeStart = d;
-                viajeEnd = d;
+                viajeStart = d; viajeEnd = d;
             } else if (viajeStart && viajeEnd && viajeStart.getTime() === viajeEnd.getTime()) {
-                // Hay 1 solo día marcado. Completamos el rango.
-                if (d < viajeStart) {
-                    viajeStart = d;
-                    viajeEnd = d; // Resetea hacia atrás
-                } else {
-                    viajeEnd = d; // Cierra el rango
-                }
+                if (d < viajeStart) { viajeStart = d; viajeEnd = d; } 
+                else { viajeEnd = d; }
             } else {
-                viajeStart = d;
-                viajeEnd = d;
+                viajeStart = d; viajeEnd = d;
             }
             renderViajeCal();
         }
@@ -566,19 +566,20 @@
             let html = '';
             for (let i = 0; i < startOffset; i++) { html += `<div></div>`; }
 
+            const todayStr = getLocalIsoString(new Date());
+
             for (let d = 1; d <= daysInMonth; d++) {
                 const currentD = new Date(y, m, d);
-                // Prevenir problemas de timezone al generar string ISO
-                const ts = currentD.getTime();
-                const dateStr = new Date(ts - (currentD.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                const dateStr = getLocalIsoString(currentD);
                 
                 const startTs = viajeStart ? viajeStart.getTime() : null;
                 const endTs = viajeEnd ? viajeEnd.getTime() : null;
+                const ts = currentD.getTime();
 
                 let isStart = startTs === ts;
                 let isEnd = endTs === ts;
                 let inRange = startTs && endTs && ts > startTs && ts < endTs;
-                let isToday = new Date().toDateString() === currentD.toDateString();
+                let isToday = todayStr === dateStr;
 
                 let wrapperClass = "relative flex justify-center items-center h-7";
                 let innerClass = "w-6 h-6 flex items-center justify-center rounded-full z-10 cursor-pointer text-gray-700 hover:bg-gray-200 transition-colors cal-btn";
@@ -587,7 +588,6 @@
                     wrapperClass += " bg-teal-50";
                     innerClass = "w-full h-full rounded-none hover:bg-teal-100 text-teal-800 font-bold";
                 } 
-                
                 if (isStart && isEnd) {
                     innerClass = "w-6 h-6 bg-teal-600 text-white font-bold shadow-md";
                 } else if (isStart) {
@@ -613,11 +613,7 @@
 
         function enviarViaje(e) {
             e.preventDefault();
-            
-            if (!viajeStart || !viajeEnd) {
-                alert("Por favor, selecciona las fechas en el calendario.");
-                return;
-            }
+            if (!viajeStart || !viajeEnd) { alert("Por favor, selecciona las fechas en el calendario."); return; }
 
             const tIn = document.getElementById('viajeTurnoIn').value;
             const tFin = document.getElementById('viajeTurnoFin').value;
@@ -629,7 +625,7 @@
             let payloadArr = [];
             
             for(let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
-                let fStr = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                let fStr = getLocalIsoString(d);
                 if (d.getTime() === startD.getTime() && d.getTime() === endD.getTime()) {
                     if (tIn === "Tarde" && tFin === "Mañana") { } 
                     else if (tIn === "Mañana" && tFin === "Tarde") { payloadArr.push({fecha:fStr, turno:"Mañana", coche, nombre}); payloadArr.push({fecha:fStr, turno:"Tarde", coche, nombre}); }
@@ -655,12 +651,12 @@
             cerrarModal('viajeModal');
             document.getElementById('viajeNombre').value = '';
 
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payloadArr) })
-            .then(() => { cargarDatos(false); });
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payloadArr) });
         }
 
+
         // ==========================================
-        // RESTO DE FUNCIONES (Taller, Ajustes, etc.)
+        // INFO COCHE Y TALLER
         // ==========================================
         function formatPhone(text) {
             const phoneRegex = /\b(?:(?:\+|00)34[\s.-]?)?[6789](?:[\s.-]?\d){8}\b/g;
@@ -671,16 +667,12 @@
             currentCocheIdForTaller = cocheId; 
             document.getElementById('infoCocheTitle').innerText = getAliasForCoche(cocheId);
             document.getElementById('infoCocheImg').src = getImgForCoche(cocheId);
-            
             isEditModeInfo = false; 
             renderInfoCocheContent();
             document.getElementById('infoCocheModal').classList.remove('hidden');
         }
 
-        function toggleEditCoche() {
-            isEditModeInfo = !isEditModeInfo;
-            renderInfoCocheContent();
-        }
+        function toggleEditCoche() { isEditModeInfo = !isEditModeInfo; renderInfoCocheContent(); }
 
         function renderInfoCocheContent() {
             let targetKey = Object.keys(infoCochesGlobal).find(k => k.toLowerCase().includes(currentCocheIdForTaller.toLowerCase()));
@@ -722,7 +714,6 @@
             e.preventDefault();
             let targetKey = Object.keys(infoCochesGlobal).find(k => k.toLowerCase().includes(currentCocheIdForTaller.toLowerCase()));
             let datosNuevos = [];
-            
             let inputs = document.querySelectorAll('input[id^="editCocheVal_"]');
             inputs.forEach(inp => { datosNuevos.push({ label: inp.getAttribute('data-label'), value: inp.value }); });
             
@@ -731,39 +722,57 @@
             renderInfoCocheContent(); 
 
             const payload = { action: "update_coche", coche: currentCocheIdForTaller, datos: datosNuevos };
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            .then(() => { cargarDatos(false); });
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        }
+
+        // Auto-actualiza la fecha de fin de taller si eliges una posterior
+        function sincronizarFechaTaller() {
+            const fIn = document.getElementById('tallerFechaIn').value;
+            const fFinEl = document.getElementById('tallerFechaFin');
+            if (fIn && (!fFinEl.value || fFinEl.value < fIn)) {
+                fFinEl.value = fIn;
+            }
         }
 
         function abrirTallerModal() {
             cerrarModal('infoCocheModal');
-            document.getElementById('tallerCocheNameText').innerText = getAliasForCoche(currentCocheIdForTaller);
+            try {
+                const titleEl = document.getElementById('tallerCocheNameText');
+                if(titleEl) titleEl.innerText = getAliasForCoche(currentCocheIdForTaller);
+                
+                const hoyIso = getLocalIsoString(new Date());
+                let slotsTaller = [];
+                
+                let checkD = new Date(); checkD.setHours(0,0,0,0);
+                for(let i=0; i<60; i++) {
+                    let fStr = getLocalIsoString(checkD);
+                    let rM = reservasActivas.get(`${currentCocheIdForTaller}_${fStr}_Mañana`);
+                    let rT = reservasActivas.get(`${currentCocheIdForTaller}_${fStr}_Tarde`);
+                    if(rM && rM.taller) slotsTaller.push({ fecha: fStr, turno: 'Mañana', obs: rM.observacion });
+                    if(rT && rT.taller) slotsTaller.push({ fecha: fStr, turno: 'Tarde', obs: rT.observacion });
+                    checkD.setDate(checkD.getDate() + 1);
+                }
+                
+                if (slotsTaller.length > 0) {
+                    document.getElementById('tallerMainTitleText').innerHTML = `<i class="fas fa-tools mr-2"></i>Modificar Taller:`;
+                    document.getElementById('tallerFechaIn').value = slotsTaller[0].fecha; 
+                    document.getElementById('tallerTurnoIn').value = slotsTaller[0].turno;
+                    document.getElementById('tallerFechaFin').value = slotsTaller[slotsTaller.length-1].fecha; 
+                    document.getElementById('tallerTurnoFin').value = slotsTaller[slotsTaller.length-1].turno;
+                    document.getElementById('tallerObs').value = slotsTaller[0].obs || "";
+                    document.getElementById('btnTaller').innerText = "Actualizar Taller"; 
+                    document.getElementById('btnBorrarTaller').classList.remove('hidden');
+                } else {
+                    document.getElementById('tallerMainTitleText').innerHTML = `<i class="fas fa-tools mr-2"></i>Nuevo Taller:`;
+                    document.getElementById('tallerFechaIn').value = hoyIso; 
+                    document.getElementById('tallerFechaFin').value = hoyIso;
+                    document.getElementById('tallerObs').value = "";
+                    document.getElementById('btnTaller').innerText = "Aplicar Taller"; 
+                    document.getElementById('btnBorrarTaller').classList.add('hidden');
+                }
+            } catch(e) { console.error("Protección anti-bug:", e); }
             
-            const hoyIso = new Date().toISOString().split('T')[0];
-            let slotsTaller = [];
-            
-            let checkD = new Date(); checkD.setHours(0,0,0,0);
-            for(let i=0; i<60; i++) {
-                let fStr = checkD.toISOString().split('T')[0];
-                let rM = reservasActivas.get(`${currentCocheIdForTaller}_${fStr}_Mañana`);
-                let rT = reservasActivas.get(`${currentCocheIdForTaller}_${fStr}_Tarde`);
-                if(rM && rM.taller) slotsTaller.push({ fecha: fStr, turno: 'Mañana', obs: rM.observacion });
-                if(rT && rT.taller) slotsTaller.push({ fecha: fStr, turno: 'Tarde', obs: rT.observacion });
-                checkD.setDate(checkD.getDate() + 1);
-            }
-            
-            if (slotsTaller.length > 0) {
-                document.getElementById('tallerMainTitleText').innerHTML = `<i class="fas fa-tools mr-2"></i>Modificar Taller:`;
-                document.getElementById('tallerFechaIn').value = slotsTaller[0].fecha; document.getElementById('tallerTurnoIn').value = slotsTaller[0].turno;
-                document.getElementById('tallerFechaFin').value = slotsTaller[slotsTaller.length-1].fecha; document.getElementById('tallerTurnoFin').value = slotsTaller[slotsTaller.length-1].turno;
-                document.getElementById('tallerObs').value = slotsTaller[0].obs || "";
-                document.getElementById('btnTaller').innerText = "Actualizar Taller"; document.getElementById('btnBorrarTaller').classList.remove('hidden');
-            } else {
-                document.getElementById('tallerMainTitleText').innerHTML = `<i class="fas fa-tools mr-2"></i>Nuevo Taller:`;
-                document.getElementById('tallerFechaIn').value = hoyIso; document.getElementById('tallerFechaFin').value = hoyIso;
-                document.getElementById('tallerObs').value = "";
-                document.getElementById('btnTaller').innerText = "Aplicar Taller"; document.getElementById('btnBorrarTaller').classList.add('hidden');
-            }
+            // Garantiza que la ventana se abre siempre
             document.getElementById('tallerModal').classList.remove('hidden');
         }
 
@@ -772,11 +781,11 @@
             const obs = document.getElementById('tallerObs').value;
             const fIn = document.getElementById('tallerFechaIn').value; const tIn = document.getElementById('tallerTurnoIn').value;
             const fFin = document.getElementById('tallerFechaFin').value; const tFin = document.getElementById('tallerTurnoFin').value;
-            const hoyIso = new Date().toISOString().split('T')[0];
+            const hoyIso = getLocalIsoString(new Date());
 
             let checkD = new Date(); checkD.setHours(0,0,0,0);
             for(let i=0; i<60; i++) {
-                let fStr = checkD.toISOString().split('T')[0];
+                let fStr = getLocalIsoString(checkD);
                 ['Mañana', 'Tarde'].forEach(t => {
                     let res = reservasActivas.get(`${currentCocheIdForTaller}_${fStr}_${t}`);
                     if (res) { res.taller = false; res.observacion = ""; }
@@ -784,9 +793,9 @@
                 checkD.setDate(checkD.getDate() + 1);
             }
             
-            let startD = new Date(fIn); let endD = new Date(fFin);
+            let startD = parseLocalDate(fIn); let endD = parseLocalDate(fFin);
             for(let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
-                let fStr = d.toISOString().split('T')[0];
+                let fStr = getLocalIsoString(d);
                 let turnos = [];
                 if (d.getTime() === startD.getTime() && d.getTime() === endD.getTime()) {
                     if (tIn === "Mañana" && tFin === "Tarde") turnos = ["Mañana", "Tarde"];
@@ -811,16 +820,15 @@
                 action: "taller", coche: currentCocheIdForTaller, observacion: obs, fechaHoy: hoyIso,
                 inicio: { fecha: fIn, turno: tIn }, fin: { fecha: fFin, turno: tFin }
             };
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            .then(() => { cargarDatos(false); });
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         }
 
         function borrarTaller() {
-            const hoyIso = new Date().toISOString().split('T')[0];
+            const hoyIso = getLocalIsoString(new Date());
             
             let checkD = new Date(); checkD.setHours(0,0,0,0);
             for(let i=0; i<60; i++) {
-                let fStr = checkD.toISOString().split('T')[0];
+                let fStr = getLocalIsoString(checkD);
                 ['Mañana', 'Tarde'].forEach(t => {
                     let res = reservasActivas.get(`${currentCocheIdForTaller}_${fStr}_${t}`);
                     if (res) { res.taller = false; res.observacion = ""; }
@@ -831,8 +839,7 @@
             cerrarModal('tallerModal');
 
             const payload = { action: "borrar_taller", coche: currentCocheIdForTaller, fechaHoy: hoyIso };
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            .then(() => { cargarDatos(false); });
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         }
 
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
