@@ -13,82 +13,107 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        body { -webkit-user-select: none; user-select: none; touch-action: manipulation; overflow: hidden; background-color: #f9fafb; }
+        body { -webkit-user-select: none; user-select: none; touch-action: manipulation; overflow: hidden; background-color: #f3f4f6; }
         
-        .slot-btn:active, .fab-btn:active { transform: scale(0.92); }
+        .slot-btn:active, .fab-btn:active, .nav-btn:active { transform: scale(0.92); }
         
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #0f766e; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* SCROLL FLUIDO */
+        /* SCROLL 2D FLUIDO Y OCULTO */
         #scroll-container {
-            display: flex; overflow-x: auto; scroll-behavior: smooth;
+            overflow: auto; scroll-behavior: smooth;
             -ms-overflow-style: none; scrollbar-width: none;
         }
         #scroll-container::-webkit-scrollbar { display: none; }
         
-        /* Ajuste de columnas (7 exactas) */
-        .day-col { flex: 1 0 14.28%; min-width: 44px; display: flex; flex-direction: column; align-items: center; border-right: 1px solid #f3f4f6; }
+        /* Ajuste de columnas (7 exactas adaptables a horizontal/vertical) */
+        .day-col { 
+            /* Se adapta dinámicamente al ancho del dispositivo restando la columna izquierda */
+            width: calc((min(100vw, 56rem) - 86px) / 7); 
+            flex-shrink: 0; display: flex; flex-direction: column; align-items: center; border-right: 1px solid #f3f4f6; 
+        }
         .day-col:last-child { border-right: none; }
+
+        /* Estilo para los botones de coche sin globo, ocupando el 100% */
+        .car-image-btn {
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s;
+            overflow: hidden;
+            border-radius: 0.5rem;
+        }
+        .car-image-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            mix-blend-mode: multiply; /* Funde el fondo blanco de la foto con el botón */
+            transform: scale(1.15); /* Zoom para recortar los márgenes blancos propios de la imagen */
+        }
     </style>
 </head>
-<body class="min-h-screen font-sans flex flex-col items-center">
+<body class="min-h-screen font-sans flex flex-col items-center justify-center">
 
-    <div class="w-full max-w-md bg-white h-screen shadow-2xl relative flex flex-col overflow-hidden">
+    <!-- El max-w-4xl permite que se expanda estupendamente al girar el móvil en horizontal -->
+    <div class="w-full h-screen max-w-4xl bg-white shadow-2xl relative flex flex-col overflow-hidden">
         
-        <!-- CABECERA CON IMAGEN RECORTADA Y BOTÓN FLOTANTE -->
-        <header class="relative shrink-0 w-full z-30">
-            <!-- Imagen Hero recortada -->
-            <div class="w-full h-[150px] relative overflow-hidden bg-gray-100">
-                <img src="27989.jpg" alt="Portada" class="w-full h-[220px] object-cover object-[center_60%] absolute top-[-35px]">
-                <!-- Degradado suave inferior para fusionar con la tabla -->
-                <div class="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white to-transparent"></div>
-            </div>
+        <!-- CABECERA HERO -->
+        <header class="relative shrink-0 w-full z-30 shadow-sm bg-white">
             
             <!-- Botón Sincronizar FLOTANTE SOBRE LA IMAGEN -->
             <button onclick="cargarDatos(true)" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/70 backdrop-blur-md hover:bg-white border border-white/50 transition active:scale-95 shadow-md z-40">
                 <i id="sync-icon" class="fas fa-sync-alt text-teal-800 text-sm"></i>
                 <div id="sync-loader" class="loader absolute hidden border-gray-200 border-t-teal-800 border-[3px] w-4 h-4"></div>
             </button>
-        </header>
 
-        <!-- CONTENEDOR PRINCIPAL (Tabla) -->
-        <main class="flex-1 flex flex-col w-full relative z-20"> 
-            
-            <!-- Zona Superior: Coches Fijos Izq + Días Deslizables Der -->
-            <div class="flex-1 flex w-full relative bg-white shadow-sm">
+            <!-- Imagen Portada (Altura ampliada y recortada inteligentemente) -->
+            <div class="w-full h-[165px] md:h-[200px] relative overflow-hidden bg-[#0c2f2b]">
+                <!-- El object-[center_65%] enfoca la cámara un poco más abajo para centrar el coche -->
+                <img src="27989.jpg" alt="Portada" class="w-full h-[240px] md:h-[280px] object-cover object-[center_65%] absolute top-[-30px] md:top-[-40px]">
                 
-                <!-- COLUMNA FIJA IZQUIERDA (Imágenes Coches al 100%) -->
-                <div class="w-[86px] flex-shrink-0 flex flex-col bg-white border-r border-gray-200 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
-                    <div class="h-[52px] w-full border-b border-gray-200 bg-gray-50"></div>
-                    <div id="fixed-cars-col" class="flex flex-col"></div>
-                </div>
-
-                <!-- ÁREA DESLIZABLE (Calendario de 7 columnas exactas) -->
-                <div id="scroll-container" class="flex-1 relative bg-white">
-                    <div id="calendar-grid" class="flex w-full"></div>
-                </div>
+                <!-- Degradado suave inferior -->
+                <div class="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none"></div>
             </div>
-
-            <!-- Flechas de Navegación (Alineadas con el calendario) -->
-            <div class="w-full h-12 bg-white border-y border-gray-200 flex items-center z-30 shadow-sm relative">
-                <!-- Espaciador invisible con el mismo ancho que la columna de coches -->
-                <div class="w-[86px] flex-shrink-0 border-r border-gray-100 h-full"></div>
+            
+            <!-- Flechas y Semana Flotantes sobre el degradado -->
+            <div class="absolute bottom-0 w-full flex justify-between items-end px-1 pb-1.5 z-40">
+                <!-- Espaciador exacto para alinear la flecha izquierda con la cuadrícula de reservas -->
+                <div class="w-[86px] flex-shrink-0"></div>
                 
-                <!-- Controles alineados debajo de las columnas de días -->
                 <div class="flex-1 flex justify-between items-center px-1">
-                    <button onclick="scrollSieteDias(-1)" class="w-10 h-10 flex items-center justify-center text-teal-700 hover:bg-gray-100 rounded-full active:scale-90 transition">
+                    <button onclick="scrollSieteDias(-1)" class="nav-btn w-9 h-9 flex items-center justify-center text-teal-700 bg-white/90 hover:bg-white backdrop-blur shadow-sm rounded-full transition border border-gray-200">
                         <i class="fas fa-chevron-left"></i>
                     </button>
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Semana</span>
-                    <button onclick="scrollSieteDias(1)" class="w-10 h-10 flex items-center justify-center text-teal-700 hover:bg-gray-100 rounded-full active:scale-90 transition">
+                    <span class="text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1 drop-shadow-md">Semana</span>
+                    <button onclick="scrollSieteDias(1)" class="nav-btn w-9 h-9 flex items-center justify-center text-teal-700 bg-white/90 hover:bg-white backdrop-blur shadow-sm rounded-full transition border border-gray-200">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
             </div>
+        </header>
+
+        <!-- CONTENEDOR PRINCIPAL 2D (Tabla adaptable) -->
+        <main id="scroll-container" class="flex-1 w-full relative z-20 bg-white"> 
             
-            <!-- Relleno inferior para los botones flotantes -->
-            <div class="h-[80px] w-full bg-gray-50"></div>
+            <!-- pb-28 añade espacio al fondo para que las últimas reservas no queden tapadas por los botones flotantes -->
+            <div class="flex w-max min-w-full pb-28">
+                
+                <!-- COLUMNA FIJA IZQUIERDA (Sticky Horizontal) -->
+                <div class="w-[86px] flex-shrink-0 flex flex-col bg-white border-r border-gray-200 sticky left-0 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)]">
+                    <!-- Esquina vacía (Sticky Horizontal y Vertical) -->
+                    <div class="h-[52px] w-full border-b border-gray-200 bg-gray-50 sticky top-0 z-40"></div>
+                    <!-- Iconos Coches -->
+                    <div id="fixed-cars-col" class="flex flex-col"></div>
+                </div>
+
+                <!-- ÁREA DESLIZABLE CALENDARIO -->
+                <div id="calendar-grid" class="flex flex-1"></div>
+                
+            </div>
         </main>
 
         <!-- AVISO DE CARGA FLOTANTE -->
@@ -129,11 +154,11 @@
             </div>
 
             <div class="mb-5 text-gray-700 bg-gray-50 p-3 rounded-lg text-sm flex items-center">
-                <div class="w-16 h-10 mr-3 bg-white rounded flex justify-center items-center overflow-hidden mix-blend-multiply">
+                <div class="w-20 h-12 mr-3 bg-white rounded flex justify-center items-center overflow-hidden mix-blend-multiply border border-gray-200 p-1">
                     <img id="modalCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-110">
                 </div>
                 <div>
-                    <p><strong id="modalCocheName"></strong></p>
+                    <p><strong id="modalCocheName" class="text-base uppercase tracking-wide"></strong></p>
                     <p class="mt-0.5"><i class="far fa-calendar-alt text-teal-600 mr-1"></i> <span id="modalFecha"></span> (<span id="modalTurno" class="font-semibold"></span>)</p>
                 </div>
             </div>
@@ -150,10 +175,10 @@
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl max-h-[90vh] flex flex-col">
             
             <div class="relative flex flex-col items-center justify-center mb-2 border-b border-gray-100 pb-3">
-                <div class="w-32 h-20 bg-white rounded-lg p-1 flex items-center justify-center mb-2 overflow-hidden mix-blend-multiply">
+                <div class="w-32 h-20 bg-white rounded-lg p-1 flex items-center justify-center mb-2 overflow-hidden mix-blend-multiply border border-gray-200 shadow-sm">
                     <img id="infoCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-110">
                 </div>
-                <h3 class="text-lg font-bold text-gray-800 text-center" id="infoCocheTitle">Datos Vehículo</h3>
+                <h3 class="text-lg font-bold text-gray-800 text-center uppercase tracking-wider" id="infoCocheTitle">Datos Vehículo</h3>
                 
                 <button id="btnConfigCoche" onclick="toggleEditCoche()" class="absolute right-0 top-0 text-gray-400 hover:text-teal-600 text-xl transition p-2">
                     <i class="fas fa-cog"></i>
@@ -359,13 +384,13 @@
         function renderApp() {
             const todayStr = new Date().toDateString();
             
-            // IMÁGENES AL 100% SIN GLOBO
+            // IMÁGENES AL 100% (Sin globo y con zoom para eliminar márgenes blancos de origen)
             let fixedHtml = "";
             coches.forEach(coche => {
                 fixedHtml += `
-                    <div class="flex items-center justify-center h-[5.5rem] border-b border-gray-100 last:border-b-0 w-full overflow-hidden relative">
-                        <button onclick="mostrarDatosCoche('${coche.id}')" class="w-full h-full bg-white active:bg-gray-50 transition flex items-center justify-center focus:outline-none">
-                            <img src="${coche.img}" alt="${coche.alias}" class="w-full h-[120%] object-contain mix-blend-multiply scale-110" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23eee\\'/></svg>'">
+                    <div class="flex items-center justify-center h-[5.5rem] border-b border-gray-100 last:border-b-0 w-full px-1.5 py-1">
+                        <button onclick="mostrarDatosCoche('${coche.id}')" class="car-image-btn active:scale-95 border border-gray-100/50">
+                            <img src="${coche.img}" alt="${coche.alias}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23eee\\'/></svg>'">
                         </button>
                     </div>`;
             });
@@ -376,12 +401,14 @@
                 const isToday = fechaObj.toDateString() === todayStr;
                 const fechaStr = new Date(fechaObj.getTime() - (fechaObj.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
                 
+                // Fondo blanco para días normales, sombreado sutil para HOY. Las cabeceras de fechas son sticky (fijas al hacer scroll vertical).
                 const bgClass = isToday ? 'bg-teal-50 border-teal-200' : 'bg-transparent border-gray-100';
+                const headerBg = isToday ? 'bg-teal-50' : 'bg-white';
                 const textClass = isToday ? 'text-teal-800' : 'text-gray-500';
                 
                 let colHtml = `
                 <div class="day-col ${bgClass}" id="dia-${index}">
-                    <div class="h-[52px] w-full flex flex-col items-center justify-center border-b border-gray-100">
+                    <div class="h-[52px] w-full flex flex-col items-center justify-center border-b border-gray-100 sticky top-0 z-20 ${headerBg}">
                         <span class="text-[9px] ${textClass} font-bold tracking-wider">${diasNombres[fechaObj.getDay()]}</span>
                         <span class="text-[13px] font-bold ${textClass}">${fechaObj.getDate()}</span>
                     </div>`;
@@ -448,10 +475,11 @@
             }
         }
 
+        // Calcula el salto en base a la anchura visible (adaptable dinámicamente)
         function scrollSieteDias(direccion) { 
             const container = document.getElementById('scroll-container');
-            const widthToScroll = container.clientWidth;
-            container.scrollBy({ left: direccion * widthToScroll, behavior: 'smooth' }); 
+            const colWidth = (container.clientWidth - 86); // Ancho de la tabla visible sin contar los coches
+            container.scrollBy({ left: direccion * colWidth, behavior: 'smooth' }); 
         }
         
         function cerrarModal(id) { document.getElementById(id).classList.add('hidden'); }
