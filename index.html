@@ -13,12 +13,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        /* Bloqueo total del rebote del navegador (Anti-bounce nativo) */
-        html, body { 
-            width: 100%; height: 100%; margin: 0; padding: 0;
-            overflow: hidden; position: fixed; 
+        body { 
             -webkit-user-select: none; user-select: none; touch-action: manipulation; 
-            background-color: #f3f4f6; 
+            background-color: #f3f4f6; overflow: hidden; /* Evita rebotes del navegador */
         }
         
         .slot-btn:active, .fab-btn:active, .nav-btn:active { transform: scale(0.92); }
@@ -26,89 +23,66 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #0f766e; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* SCROLL 2D FLUIDO Y OCULTO */
-        #scroll-container {
-            overflow: auto; scroll-behavior: smooth;
-            -ms-overflow-style: none; scrollbar-width: none;
-        }
-        #scroll-container::-webkit-scrollbar { display: none; }
-        
-        /* Ajuste Responsive Inteligente: 7 columnas exactas sea cual sea el ancho de la pantalla */
-        .day-col { 
-            flex: 0 0 calc((min(100vw, 56rem) - 86px) / 7); 
-            display: flex; flex-direction: column; align-items: center; border-right: 1px solid #f3f4f6; 
-        }
-        .day-col:last-child { border-right: none; }
-
-        /* Estilo para los botones de coche sin globo, ocupando el 100% */
-        .car-image-btn {
-            width: 100%; height: 100%;
-            background-color: white;
-            display: flex; align-items: center; justify-content: center;
-            transition: transform 0.1s;
-            overflow: hidden; border-radius: 0.5rem;
-        }
-        .car-image-btn img {
-            width: 100%; height: 100%;
-            object-fit: contain;
-            mix-blend-mode: multiply; /* Funde el fondo blanco de la foto con el botón */
-            transform: scale(1.20); /* Zoom para recortar los márgenes blancos propios de la imagen */
-        }
+        /* Ocultar barra de scroll nativa */
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="font-sans flex flex-col items-center justify-center">
+<body class="font-sans flex flex-col items-center justify-center w-full h-screen m-0 p-0">
 
-    <!-- Contenedor adaptativo: max-w-4xl hace que responda genial si giras el móvil o usas Tablet -->
+    <!-- CONTENEDOR PRINCIPAL: Se adapta en vertical y horizontal (max-w-4xl) -->
     <div class="w-full h-full max-w-4xl bg-white shadow-2xl relative flex flex-col overflow-hidden mx-auto">
         
-        <!-- CABECERA HERO (FIJA) -->
+        <!-- CABECERA HERO -->
         <header class="relative shrink-0 w-full z-40 bg-white">
             
-            <!-- Botón Sincronizar FLOTANTE SOBRE LA IMAGEN (Arriba derecha) -->
+            <!-- Botón Sincronizar Flotante -->
             <button onclick="cargarDatos(true)" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/40 backdrop-blur-md hover:bg-white border border-white/50 transition active:scale-95 shadow-md z-50">
                 <i id="sync-icon" class="fas fa-sync-alt text-teal-900 text-sm"></i>
                 <div id="sync-loader" class="loader absolute hidden border-gray-200 border-t-teal-900 border-[3px] w-4 h-4"></div>
             </button>
 
-            <!-- Imagen Portada (Altura ampliada, ancho completo) -->
-            <div class="w-full h-[165px] md:h-[220px] relative overflow-hidden bg-[#0c2f2b]">
-                <img src="27989.jpg" alt="Portada" class="w-full h-[240px] md:h-[300px] object-cover object-[center_60%] absolute top-[-35px] md:top-[-45px]">
-                <!-- Degradado suave inferior -->
+            <!-- Imagen Portada -->
+            <div class="w-full h-[180px] md:h-[240px] relative overflow-hidden bg-[#0c2f2b]">
+                <img src="27989.jpg" alt="Portada" class="w-full h-[240px] md:h-[300px] object-cover object-[center_60%] absolute top-[-30px] scale-105">
+                <!-- Degradado inferior -->
                 <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none"></div>
             </div>
             
-            <!-- Flechas Flotantes y Texto "SEMANA" sobre el degradado -->
+            <!-- Controles de Semana Flotantes sobre la imagen -->
             <div class="absolute bottom-0 w-full flex items-end z-50 px-1 pb-1 pointer-events-none">
-                <!-- Espaciador exacto para alinear la flecha con la columna de los días (86px de los coches) -->
+                <!-- Espaciador exacto para alinear con la columna izquierda (86px) -->
                 <div class="w-[86px] flex-shrink-0"></div>
                 
-                <!-- Controles activos -->
+                <!-- Botones activos -->
                 <div class="flex-1 flex justify-between items-center px-1 pointer-events-auto">
-                    <button onclick="scrollSieteDias(-1)" class="nav-btn w-9 h-9 flex items-center justify-center text-teal-800 bg-white/70 hover:bg-white backdrop-blur shadow-sm rounded-full transition active:scale-90 border border-white/60">
+                    <button onclick="cambiarSemana(-1)" class="nav-btn w-9 h-9 flex items-center justify-center text-teal-800 bg-white/60 hover:bg-white backdrop-blur shadow-sm rounded-full transition border border-white/60">
                         <i class="fas fa-chevron-left"></i>
                     </button>
                     <span class="text-[11px] font-black text-gray-500 uppercase tracking-widest drop-shadow-md pb-0.5">Semana</span>
-                    <button onclick="scrollSieteDias(1)" class="nav-btn w-9 h-9 flex items-center justify-center text-teal-800 bg-white/70 hover:bg-white backdrop-blur shadow-sm rounded-full transition active:scale-90 border border-white/60">
+                    <button onclick="cambiarSemana(1)" class="nav-btn w-9 h-9 flex items-center justify-center text-teal-800 bg-white/60 hover:bg-white backdrop-blur shadow-sm rounded-full transition border border-white/60">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- CONTENEDOR PRINCIPAL SCROLL NATIVO -->
-        <main id="scroll-container" class="flex-1 w-full relative z-20 bg-white flex pb-28"> 
+        <!-- ZONA DE DATOS (Scroll vertical fluido) -->
+        <main class="flex-1 w-full relative z-20 bg-white overflow-y-auto pb-36"> <!-- pb-36 asegura que se pueda hacer scroll hasta dejar el último coche libre -->
             
-            <!-- COLUMNA FIJA IZQUIERDA (Imágenes Coches al 100%) -->
-            <div class="w-[86px] flex-shrink-0 flex flex-col bg-white border-r border-gray-200 sticky left-0 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
-                <!-- Cuadro superior en blanco fijo verticalmente -->
-                <div class="h-[48px] w-full border-b border-gray-200 bg-white sticky top-0 z-40"></div>
-                <!-- Columna generada por JS -->
-                <div id="fixed-cars-col" class="flex flex-col"></div>
-            </div>
+            <div class="flex w-full min-h-max">
+                
+                <!-- COLUMNA IZQUIERDA: COCHES FIJOS -->
+                <div class="w-[86px] flex-shrink-0 flex flex-col bg-white border-r border-gray-200 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                    <!-- Esquina vacía que cuadra matemáticamente con las fechas (h-12 = 48px) -->
+                    <div class="h-12 w-full border-b border-gray-200 bg-gray-50 flex-shrink-0"></div>
+                    <!-- Coches -->
+                    <div id="fixed-cars-col" class="flex flex-col"></div>
+                </div>
 
-            <!-- CUADRÍCULA DE RESERVAS (Deslizable Horizontalmente) -->
-            <div id="calendar-grid" class="flex"></div>
-            
+                <!-- ZONA DERECHA: 7 DÍAS EXACTOS FLEXIBLES -->
+                <div id="calendar-grid" class="flex-1 flex w-full"></div>
+                
+            </div>
         </main>
 
         <!-- AVISO DE CARGA FLOTANTE -->
@@ -117,14 +91,14 @@
         </div>
 
         <!-- BOTONES FLOTANTES INFERIORES -->
-        <div class="fixed bottom-6 left-0 w-full px-6 flex justify-between items-end z-50 pointer-events-none max-w-4xl mx-auto">
+        <div class="absolute bottom-6 left-0 w-full px-6 flex justify-between items-end z-50 pointer-events-none">
             
-            <!-- BOTÓN HOY (Izquierda) -->
+            <!-- BOTÓN HOY -->
             <button onclick="irAHoy()" class="fab-btn pointer-events-auto bg-white text-teal-700 font-black px-5 py-3.5 rounded-full shadow-[0_8px_15px_rgba(0,0,0,0.15)] flex items-center justify-center hover:bg-gray-50 transition border border-gray-200">
                 HOY
             </button>
 
-            <!-- BOTÓN AÑADIR VIAJE (Derecha) -->
+            <!-- BOTÓN AÑADIR VIAJE -->
             <button onclick="abrirViajeModal()" class="fab-btn pointer-events-auto bg-teal-700 text-white px-6 py-3.5 rounded-full shadow-[0_8px_15px_rgba(15,118,110,0.3)] flex items-center justify-center hover:bg-teal-800 transition border-2 border-white/20">
                 <i class="fas fa-route text-lg mr-2"></i>
                 <span class="text-sm font-bold uppercase tracking-widest">Viaje</span>
@@ -150,7 +124,7 @@
 
             <div class="mb-5 text-gray-700 bg-gray-50 p-3 rounded-lg text-sm flex items-center">
                 <div class="w-20 h-12 mr-3 bg-white rounded flex justify-center items-center overflow-hidden mix-blend-multiply border border-gray-200 p-1 shadow-sm">
-                    <img id="modalCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-125">
+                    <img id="modalCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-[1.35]">
                 </div>
                 <div>
                     <p><strong id="modalCocheName" class="text-base uppercase tracking-wide"></strong></p>
@@ -171,7 +145,7 @@
             
             <div class="relative flex flex-col items-center justify-center mb-2 border-b border-gray-100 pb-3">
                 <div class="w-32 h-20 bg-white rounded-lg p-1 flex items-center justify-center mb-2 overflow-hidden mix-blend-multiply border border-gray-200 shadow-sm">
-                    <img id="infoCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-125">
+                    <img id="infoCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-[1.35]">
                 </div>
                 <h3 class="text-lg font-bold text-gray-800 text-center uppercase tracking-wider" id="infoCocheTitle">Datos Vehículo</h3>
                 
@@ -279,16 +253,9 @@
         let currentCocheIdForTaller = "";
         let isEditModeInfo = false; 
         
-        // Ahora cargamos 60 días para poder hacer scroll horizontal natural
-        let arrayFechas = [];
+        // BaseDate inicia hoy. Ya no usamos array pregenerado, generamos 7 días dinámicamente
         let baseDate = new Date();
         baseDate.setHours(0,0,0,0);
-        baseDate.setDate(baseDate.getDate() - 15);
-        for(let i=0; i<60; i++) {
-            let d = new Date(baseDate);
-            d.setDate(baseDate.getDate() + i);
-            arrayFechas.push(d);
-        }
 
         window.addEventListener('DOMContentLoaded', () => {
             const selectCoche = document.getElementById('viajeCoche');
@@ -364,43 +331,36 @@
         }
 
         function irAHoy() {
-            const todayStr = new Date().toDateString();
-            const todayIndex = arrayFechas.findIndex(d => d.toDateString() === todayStr);
-            if(todayIndex !== -1) {
-                const diaEl = document.getElementById(`dia-${todayIndex}`);
-                if (diaEl) {
-                    const container = document.getElementById('scroll-container');
-                    // Calculamos la posición considerando que la columna izquierda es pegajosa
-                    container.scrollTo({ left: diaEl.offsetLeft - 86, behavior: 'smooth' });
-                }
-            }
+            baseDate = new Date();
+            baseDate.setHours(0,0,0,0);
+            renderApp();
         }
 
-        // SCROLL INTELIGENTE PARA LAS FLECHAS
-        function scrollSieteDias(direccion) { 
-            const container = document.getElementById('scroll-container');
-            const colWidth = container.clientWidth - 86; // Ancho visible exacto de 7 columnas
-            container.scrollBy({ left: direccion * colWidth, behavior: 'smooth' }); 
+        function cambiarSemana(direccion) {
+            baseDate.setDate(baseDate.getDate() + (direccion * 7));
+            renderApp();
         }
 
         function renderApp() {
             const todayStr = new Date().toDateString();
             
-            // COLUMNA FIJA: IMÁGENES AL 100% CON ZOOM INTERNO
+            // COLUMNA FIJA: IMÁGENES GIGANTES AL 100% SIN TEXTO
             let fixedHtml = "";
             coches.forEach(coche => {
                 fixedHtml += `
-                    <div class="h-[6rem] border-b border-gray-100 last:border-b-0 w-full bg-white overflow-hidden p-1">
-                        <button onclick="mostrarDatosCoche('${coche.id}')" class="car-image-btn active:scale-95 border border-gray-100 shadow-sm focus:outline-none">
-                            <img src="${coche.img}" alt="${coche.alias}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23eee\\'/></svg>'">
+                    <div class="h-[6rem] border-b border-gray-200 last:border-b-0 w-full bg-white overflow-hidden p-0 flex-shrink-0">
+                        <button onclick="mostrarDatosCoche('${coche.id}')" class="w-full h-full active:scale-95 transition focus:outline-none flex items-center justify-center">
+                            <img src="${coche.img}" alt="${coche.alias}" class="w-full h-full object-contain mix-blend-multiply scale-[1.35]" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23eee\\'/></svg>'">
                         </button>
                     </div>`;
             });
             document.getElementById('fixed-cars-col').innerHTML = fixedHtml;
 
-            // CALENDARIO DESLIZABLE (60 Días)
+            // CUADRÍCULA: EXACTAMENTE 7 COLUMNAS FLEXIBLES
             let gridHtml = "";
-            arrayFechas.forEach((fechaObj, index) => {
+            for (let i = 0; i < 7; i++) {
+                let fechaObj = new Date(baseDate);
+                fechaObj.setDate(baseDate.getDate() + i);
                 const isToday = fechaObj.toDateString() === todayStr;
                 const fechaStr = new Date(fechaObj.getTime() - (fechaObj.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
                 
@@ -408,9 +368,10 @@
                 const headerBg = isToday ? 'bg-teal-50' : 'bg-white';
                 const textClass = isToday ? 'text-teal-800' : 'text-gray-500';
                 
+                // flex-1 asegura que las 7 columnas se repartan el espacio a partes iguales
                 let colHtml = `
-                <div class="day-col ${bgClass}" id="dia-${index}">
-                    <div class="h-[48px] w-full flex flex-col items-center justify-center border-b border-gray-200 sticky top-0 z-30 ${headerBg}">
+                <div class="flex-1 w-0 min-w-[44px] flex flex-col items-center border-r border-gray-100 last:border-r-0 ${bgClass}">
+                    <div class="h-12 w-full flex flex-col items-center justify-center border-b border-gray-200 flex-shrink-0 ${headerBg}">
                         <span class="text-[9px] ${textClass} font-bold tracking-wider">${diasNombres[fechaObj.getDay()]}</span>
                         <span class="text-[13px] font-black ${textClass}">${fechaObj.getDate()}</span>
                     </div>`;
@@ -452,29 +413,25 @@
                         else styleT += "text-teal-700 border-[1.5px] border-teal-500 border-t-0 ";
                     }
 
-                    let midLine = `<div class="h-[1px] bg-teal-100 w-[90%] mx-auto"></div>`;
+                    let midLine = `<div class="h-[1.5px] bg-teal-100 w-[90%] mx-auto"></div>`;
                     if (isTallerM && isTallerT) {
                         midLine = `<div class="h-[2.5px] bg-[#f59e0b] w-full"></div>`; 
                     } else if (isResM && isResT) {
-                        midLine = `<div class="h-[1.5px] bg-[#2b0000] w-[95%] mx-auto"></div>`; 
+                        midLine = `<div class="h-[2px] bg-[#2b0000] w-[95%] mx-auto"></div>`; 
                     }
 
                     colHtml += `
-                        <div class="h-[6rem] w-full px-0.5 py-1.5 flex flex-col border-b border-gray-100 last:border-b-0">
-                            <button class="slot-btn flex-1 flex items-center justify-center font-bold text-[10px] transition-colors ${styleM}" onclick="${clickM}">M</button>
+                        <div class="h-[6rem] w-full px-0.5 py-[6px] flex flex-col border-b border-gray-100 last:border-b-0 flex-shrink-0">
+                            <button class="slot-btn flex-1 flex items-center justify-center font-bold text-[11px] transition-colors ${styleM}" onclick="${clickM}">M</button>
                             ${midLine}
-                            <button class="slot-btn flex-1 flex items-center justify-center font-bold text-[10px] transition-colors ${styleT}" onclick="${clickT}">T</button>
+                            <button class="slot-btn flex-1 flex items-center justify-center font-bold text-[11px] transition-colors ${styleT}" onclick="${clickT}">T</button>
                         </div>`;
                 });
                 
                 colHtml += `</div>`;
                 gridHtml += colHtml;
-            });
-            document.getElementById('calendar-grid').innerHTML = gridHtml;
-            
-            if(!window.haCentradoHoy) {
-                setTimeout(() => { irAHoy(); window.haCentradoHoy = true; }, 100);
             }
+            document.getElementById('calendar-grid').innerHTML = gridHtml;
         }
 
         function cerrarModal(id) { document.getElementById(id).classList.add('hidden'); }
