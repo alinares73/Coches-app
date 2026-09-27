@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coches-ciudadela-v9';
+const CACHE_NAME = 'coches-ciudadela-v10';
 const urlsToCache = [
   './',
   './index.html',
