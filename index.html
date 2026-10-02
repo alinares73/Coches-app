@@ -49,7 +49,7 @@
         .car-image-btn img {
             width: 100%; height: 100%;
             object-fit: contain; mix-blend-mode: multiply;
-            transform: scale(1.35); /* Zoom para recortar márgenes blancos origen */
+            transform: scale(1.35);
         }
     </style>
 </head>
@@ -137,7 +137,7 @@
             <form id="formReserva" onsubmit="enviarReservaNormal(event)">
                 <input type="text" id="inputNombre" placeholder="Nombre de la reserva..." class="w-full mb-2 border-2 border-gray-200 rounded-xl p-3 text-lg focus:border-teal-600 focus:outline-none">
                 <p class="text-[11px] text-gray-500 mb-4">Déjalo en blanco para eliminar la reserva.</p>
-                <button type="submit" id="btnConfirmarReserva" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mb-2 flex justify-center items-center shadow-md">Guardar</button>
+                <button type="submit" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mb-2 flex justify-center items-center shadow-md">Guardar</button>
             </form>
         </div>
     </div>
@@ -537,9 +537,10 @@
         let viajeEnd = null;
 
         function abrirViajeModal() { 
-            viajeStart = new Date(); viajeStart.setHours(0,0,0,0);
-            viajeEnd = new Date(viajeStart);
-            viajeCalDate = new Date(viajeStart);
+            viajeStart = null;
+            viajeEnd = null;
+            viajeCalDate = new Date();
+            viajeCalDate.setHours(0,0,0,0);
             renderViajeCal();
             document.getElementById('viajeModal').classList.remove('hidden'); 
         }
@@ -551,13 +552,16 @@
 
         function selectViajeDate(dateStr) {
             const d = parseLocalDate(dateStr);
-            if (viajeStart && viajeEnd && viajeStart.getTime() !== viajeEnd.getTime()) {
-                viajeStart = d; viajeEnd = d;
+            if (!viajeStart || (viajeStart && viajeEnd && viajeStart.getTime() !== viajeEnd.getTime())) {
+                viajeStart = d; 
+                viajeEnd = d;
             } else if (viajeStart && viajeEnd && viajeStart.getTime() === viajeEnd.getTime()) {
-                if (d < viajeStart) { viajeStart = d; viajeEnd = d; } 
-                else { viajeEnd = d; }
-            } else {
-                viajeStart = d; viajeEnd = d;
+                if (d < viajeStart) { 
+                    viajeStart = d; 
+                    viajeEnd = d; 
+                } else { 
+                    viajeEnd = d; 
+                }
             }
             renderViajeCal();
         }
@@ -605,7 +609,7 @@
                 } else if (isEnd) {
                     wrapperClass += " bg-gradient-to-r from-teal-50 to-transparent";
                     innerClass = "w-6 h-6 bg-teal-600 text-white font-bold shadow-md";
-                } else if (!inRange && isToday) {
+                } else if (!inRange && isToday && !isStart && !isEnd) {
                     innerClass += " border border-teal-400 font-bold text-teal-600";
                 }
 
@@ -749,13 +753,16 @@
 
         function selectTallerDate(dateStr) {
             const d = parseLocalDate(dateStr);
-            if (tallerStart && tallerEnd && tallerStart.getTime() !== tallerEnd.getTime()) {
-                tallerStart = d; tallerEnd = d;
+            if (!tallerStart || (tallerStart && tallerEnd && tallerStart.getTime() !== tallerEnd.getTime())) {
+                tallerStart = d; 
+                tallerEnd = d;
             } else if (tallerStart && tallerEnd && tallerStart.getTime() === tallerEnd.getTime()) {
-                if (d < tallerStart) { tallerStart = d; tallerEnd = d; } 
-                else { tallerEnd = d; }
-            } else {
-                tallerStart = d; tallerEnd = d;
+                if (d < tallerStart) { 
+                    tallerStart = d; 
+                    tallerEnd = d; 
+                } else { 
+                    tallerEnd = d; 
+                }
             }
             renderTallerCal();
         }
@@ -803,7 +810,7 @@
                 } else if (isEnd) {
                     wrapperClass += " bg-gradient-to-r from-amber-100 to-transparent";
                     innerClass = "w-6 h-6 bg-amber-600 text-white font-bold shadow-md";
-                } else if (!inRange && isToday) {
+                } else if (!inRange && isToday && !isStart && !isEnd) {
                     innerClass += " border border-amber-400 font-bold text-amber-700";
                 }
 
@@ -840,7 +847,7 @@
                 document.getElementById('tallerTurnoFin').value = slotsTaller[slotsTaller.length-1].turno;
                 document.getElementById('tallerObs').value = slotsTaller[0].obs || "";
                 
-                // Configurar calendario taller
+                // Configurar calendario taller con el rango existente
                 tallerStart = parseLocalDate(slotsTaller[0].fecha);
                 tallerEnd = parseLocalDate(slotsTaller[slotsTaller.length-1].fecha);
                 tallerCalDate = new Date(tallerStart);
@@ -851,10 +858,11 @@
                 document.getElementById('tallerMainTitleText').innerHTML = `<i class="fas fa-tools mr-2"></i>Nuevo Taller:`;
                 document.getElementById('tallerObs').value = "";
                 
-                // Configurar calendario taller a HOY
-                tallerStart = new Date(); tallerStart.setHours(0,0,0,0);
-                tallerEnd = new Date(tallerStart);
-                tallerCalDate = new Date(tallerStart);
+                // Configurar calendario taller completamente limpio
+                tallerStart = null;
+                tallerEnd = null;
+                tallerCalDate = new Date();
+                tallerCalDate.setHours(0,0,0,0);
 
                 document.getElementById('btnTaller').innerText = "Aplicar Taller"; 
                 document.getElementById('btnBorrarTaller').classList.add('hidden');
