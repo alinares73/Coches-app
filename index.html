@@ -49,7 +49,7 @@
         .car-image-btn img {
             width: 100%; height: 100%;
             object-fit: contain; mix-blend-mode: multiply;
-            transform: scale(1.35);
+            transform: scale(1.35); /* Zoom para recortar márgenes blancos origen */
         }
     </style>
 </head>
@@ -57,7 +57,7 @@
 
     <div class="w-full h-full max-w-4xl bg-white shadow-2xl relative flex flex-col overflow-hidden mx-auto">
         
-        <!-- CABECERA HERO -->
+        <!-- CABECERA HERO (FIJA) -->
         <header class="relative shrink-0 w-full z-40 bg-white shadow-sm">
             
             <button onclick="cargarDatos(true)" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/40 backdrop-blur-md hover:bg-white border border-white/50 transition active:scale-95 shadow-md z-50">
@@ -135,7 +135,7 @@
                 </div>
             </div>
             <form id="formReserva" onsubmit="enviarReservaNormal(event)">
-                <input type="text" id="inputNombre" placeholder="Tu Nombre o Horario..." class="w-full mb-2 border-2 border-gray-200 rounded-xl p-3 text-lg focus:border-teal-600 focus:outline-none">
+                <input type="text" id="inputNombre" placeholder="Nombre de la reserva..." class="w-full mb-2 border-2 border-gray-200 rounded-xl p-3 text-lg focus:border-teal-600 focus:outline-none">
                 <p class="text-[11px] text-gray-500 mb-4">Déjalo en blanco para eliminar la reserva.</p>
                 <button type="submit" id="btnConfirmarReserva" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mb-2 flex justify-center items-center shadow-md">Guardar</button>
             </form>
@@ -506,7 +506,7 @@
             } else {
                 document.getElementById('modalTitle').innerText = "Nueva Reserva";
                 document.getElementById('modalTitle').className = "text-xl font-bold text-teal-800";
-                input.value = localStorage.getItem('ultimoNombreCoches') || '';
+                input.value = '';
             }
             document.getElementById('reservaModal').classList.remove('hidden');
         }
