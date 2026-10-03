@@ -112,7 +112,7 @@
 
     <!-- === MODALES === -->
 
-    <!-- MODAL RESERVA REDISEÑADO A 2 COLUMNAS -->
+    <!-- MODAL RESERVA REDISEÑADO A 2 COLUMNAS (MÁS GRANDE) -->
     <div id="reservaModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl relative overflow-hidden">
             <div class="flex justify-between items-center mb-4 border-b pb-2 border-gray-100">
@@ -125,7 +125,7 @@
                 <p id="avisoTallerText" class="italic"></p>
             </div>
 
-            <!-- Cabecera de reserva a 2 columnas (Foto coche / Fecha y Turno) -->
+            <!-- Cabecera de reserva a 2 columnas con TEXTOS GRANDES -->
             <div class="mb-6 flex items-center justify-between gap-2">
                 
                 <!-- Columna Izquierda: Coche grande sin marco -->
@@ -133,17 +133,17 @@
                     <img id="modalCocheImg" src="" alt="Coche" class="w-full max-w-[160px] h-auto object-contain drop-shadow-sm">
                 </div>
                 
-                <!-- Columna Derecha: Fecha y Turno -->
-                <div class="flex flex-col gap-3 shrink-0 w-[140px] pl-3 border-l border-gray-100">
+                <!-- Columna Derecha: Fecha y Turno (Aumentados) -->
+                <div class="flex flex-col gap-4 shrink-0 w-[155px] pl-3 border-l border-gray-100">
                     <div class="flex items-center text-gray-800">
-                        <i class="far fa-calendar-alt text-teal-600 mr-2 text-xl"></i> 
-                        <span id="modalFecha" class="font-bold text-[15px]"></span>
+                        <i class="far fa-calendar-alt text-teal-600 mr-2.5 text-2xl"></i> 
+                        <span id="modalFecha" class="font-bold text-[18px]"></span>
                     </div>
                     <div class="flex items-start text-gray-800">
-                        <i class="far fa-clock text-teal-600 mr-2 text-xl mt-0.5"></i> 
+                        <i class="far fa-clock text-teal-600 mr-2.5 text-2xl mt-0.5"></i> 
                         <div class="flex flex-col">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Turno</span>
-                            <span id="modalTurno" class="font-black text-gray-700 text-[15px] uppercase leading-none"></span>
+                            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1.5">Turno</span>
+                            <span id="modalTurno" class="font-black text-gray-700 text-[18px] uppercase leading-none"></span>
                         </div>
                     </div>
                 </div>
