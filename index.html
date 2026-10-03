@@ -145,30 +145,35 @@
         </div>
     </div>
 
-    <!-- MODAL DATOS COCHE (INFO) -->
+    <!-- MODAL DATOS COCHE (INFO) REDISEÑADO A DOS COLUMNAS -->
     <div id="infoCocheModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl max-h-[90vh] flex flex-col relative overflow-hidden">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-5 shadow-2xl max-h-[90vh] flex flex-col relative overflow-hidden">
             
-            <!-- Cabecera de Info: Icono ENORME que domina la ventana, sin textos -->
-            <div class="relative flex flex-col items-center justify-center mb-3 border-b border-gray-100 pb-4 pt-2">
-                <button id="btnConfigCoche" onclick="toggleEditCoche()" class="absolute right-0 top-0 text-gray-400 hover:text-teal-600 text-2xl transition p-1 z-10">
-                    <i class="fas fa-cog"></i>
-                </button>
-                <div class="w-full max-w-[260px] h-36 flex items-center justify-center mix-blend-multiply overflow-visible">
-                    <img id="infoCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-[1.3]">
+            <!-- Cabecera de Info: Dos columnas -->
+            <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-4 gap-2">
+                
+                <!-- Columna Izquierda: Coche GIGANTE (Scale 1.8), sin fondo, sin recuadros y sin título extra -->
+                <div class="flex-1 h-36 flex items-center justify-center mix-blend-multiply overflow-visible">
+                    <img id="infoCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-[1.8] origin-center">
+                </div>
+                
+                <!-- Columna Derecha: Botones de Acción apilados -->
+                <div class="flex flex-col gap-2.5 w-[135px] shrink-0">
+                    <button onclick="toggleEditCoche()" class="w-full bg-teal-50 border border-teal-100 text-teal-800 hover:bg-teal-100 font-bold py-2.5 rounded-xl transition flex items-center justify-center text-xs shadow-sm">
+                        <i class="far fa-edit mr-1.5"></i> Editar datos
+                    </button>
+                    <button onclick="abrirTallerModal()" class="w-full bg-amber-50 border border-amber-100 text-amber-800 hover:bg-amber-100 font-bold py-2.5 rounded-xl transition flex items-center justify-center text-xs shadow-sm">
+                        <i class="fas fa-tools mr-1.5 text-amber-600"></i> Obs. Taller
+                    </button>
+                    <button onclick="cerrarModal('infoCocheModal')" class="w-full bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-700 font-bold py-2.5 rounded-xl transition flex items-center justify-center text-xs shadow-sm">
+                        <i class="fas fa-times mr-1.5"></i> Cerrar
+                    </button>
                 </div>
             </div>
             
-            <div id="infoCocheContent" class="text-gray-600 text-sm bg-gray-50 p-3 rounded-2xl border border-gray-100 flex-1 overflow-y-auto mb-4 custom-scrollbar"></div>
+            <!-- Contenido de datos (Lista) -->
+            <div id="infoCocheContent" class="text-gray-600 text-sm bg-gray-50 p-3 rounded-2xl border border-gray-100 flex-1 overflow-y-auto custom-scrollbar"></div>
             
-            <div id="infoCocheActions" class="flex flex-col gap-2 shrink-0">
-                <button onclick="abrirTallerModal()" class="w-full bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 font-bold py-3.5 rounded-xl transition flex items-center justify-center">
-                    <i class="fas fa-tools mr-2"></i> Observación Taller
-                </button>
-                <button onclick="cerrarModal('infoCocheModal')" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3.5 rounded-xl transition">
-                    Cerrar
-                </button>
-            </div>
         </div>
     </div>
 
@@ -210,11 +215,11 @@
                 <div class="flex gap-2">
                     <div class="w-1/2">
                         <label class="text-[10px] font-bold text-gray-500 uppercase">Turno Inicio</label>
-                        <select id="viajeTurnoIn" class="w-full border border-gray-300 p-1.5 rounded-lg mt-0.5 text-sm focus:outline-none focus:border-teal-500"><option>Mañana</option><option>Tarde</option></select>
+                        <select id="viajeTurnoIn" class="w-full border border-gray-300 p-1.5 rounded-lg mt-0.5 text-sm"><option>Mañana</option><option>Tarde</option></select>
                     </div>
                     <div class="w-1/2">
                         <label class="text-[10px] font-bold text-gray-500 uppercase">Turno Fin</label>
-                        <select id="viajeTurnoFin" class="w-full border border-gray-300 p-1.5 rounded-lg mt-0.5 text-sm focus:outline-none focus:border-teal-500"><option>Mañana</option><option>Tarde</option></select>
+                        <select id="viajeTurnoFin" class="w-full border border-gray-300 p-1.5 rounded-lg mt-0.5 text-sm"><option>Mañana</option><option>Tarde</option></select>
                     </div>
                 </div>
                 
@@ -493,7 +498,6 @@
         function abrirReservaNormal(cocheId, fechaISO, turno, fechaTexto) {
             reservaPendiente = { coche: cocheId, fecha: fechaISO, turno, id: `${cocheId}_${fechaISO}_${turno}` };
             
-            // Eliminada la línea que ponía el texto del nombre del coche debajo de la imagen
             document.getElementById('modalCocheImg').src = getImgForCoche(cocheId);
             document.getElementById('modalFecha').innerText = fechaTexto;
             document.getElementById('modalTurno').innerText = turno;
@@ -535,7 +539,6 @@
                 body: JSON.stringify([{ fecha: reservaPendiente.fecha, nombre: nombre, coche: reservaPendiente.coche, turno: reservaPendiente.turno }]) 
             });
         }
-
 
         // ==========================================
         // CALENDARIO INTERACTIVO (VIAJES)
@@ -686,7 +689,6 @@
 
         function mostrarDatosCoche(cocheId) {
             currentCocheIdForTaller = cocheId; 
-            // ELIMINADO el texto del título que duplicaba el nombre del coche
             document.getElementById('infoCocheImg').src = getImgForCoche(cocheId);
             isEditModeInfo = false; 
             renderInfoCocheContent();
@@ -712,7 +714,6 @@
                             <div class="flex flex-col mb-3">${inputs}</div>
                             <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition shadow-md">Guardar Cambios</button>
                         </form>`;
-                    document.getElementById('infoCocheActions').classList.add('hidden');
                 } else {
                     let lista = infoCochesGlobal[targetKey].map(item => `
                         <div class="flex justify-between border-b border-gray-200 border-opacity-60 py-2 last:border-0 items-center">
@@ -721,14 +722,9 @@
                         </div>
                     `).join('');
                     htmlContent = `<div class="flex flex-col">${lista}</div>`;
-                    document.getElementById('infoCocheActions').classList.remove('hidden');
                 }
             }
             document.getElementById('infoCocheContent').innerHTML = htmlContent;
-            
-            const gearBtn = document.getElementById('btnConfigCoche');
-            if(isEditModeInfo) { gearBtn.classList.add('text-teal-600'); gearBtn.classList.remove('text-gray-400'); }
-            else { gearBtn.classList.add('text-gray-400'); gearBtn.classList.remove('text-teal-600'); }
         }
 
         function guardarDatosCoche(e) {
