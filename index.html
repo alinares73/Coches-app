@@ -49,7 +49,7 @@
         .car-image-btn img {
             width: 100%; height: 100%;
             object-fit: contain; mix-blend-mode: multiply;
-            transform: scale(1.35);
+            transform: scale(1.35); /* Zoom para recortar márgenes blancos origen */
         }
     </style>
 </head>
@@ -125,9 +125,10 @@
                 <p id="avisoTallerText" class="italic"></p>
             </div>
 
+            <!-- Cabecera limpia sin globo -->
             <div class="mb-5 text-gray-700 bg-gray-50 p-3 rounded-lg text-sm flex items-center">
-                <div class="w-20 h-12 mr-3 bg-white rounded flex justify-center items-center overflow-hidden mix-blend-multiply border border-gray-200 p-1 shadow-sm">
-                    <img id="modalCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-[1.35]">
+                <div class="w-24 h-16 mr-3 flex justify-center items-center overflow-visible mix-blend-multiply">
+                    <img id="modalCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-110">
                 </div>
                 <div>
                     <p><strong id="modalCocheName" class="text-base uppercase tracking-wide"></strong></p>
@@ -137,23 +138,27 @@
             <form id="formReserva" onsubmit="enviarReservaNormal(event)">
                 <input type="text" id="inputNombre" placeholder="Nombre de la reserva..." class="w-full mb-2 border-2 border-gray-200 rounded-xl p-3 text-lg focus:border-teal-600 focus:outline-none">
                 <p class="text-[11px] text-gray-500 mb-4">Déjalo en blanco para eliminar la reserva.</p>
-                <button type="submit" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mb-2 flex justify-center items-center shadow-md">Guardar</button>
+                <button type="submit" id="btnConfirmarReserva" class="w-full bg-teal-700 text-white font-bold py-3 rounded-xl mb-2 flex justify-center items-center shadow-md">Guardar</button>
             </form>
         </div>
     </div>
 
-    <!-- MODAL DATOS COCHE -->
+    <!-- MODAL DATOS COCHE (INFO COCHE) -->
     <div id="infoCocheModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl max-h-[90vh] flex flex-col">
-            <div class="relative flex flex-col items-center justify-center mb-2 border-b border-gray-100 pb-3">
-                <div class="w-32 h-20 bg-white rounded-lg p-1 flex items-center justify-center mb-2 overflow-hidden mix-blend-multiply border border-gray-200 shadow-sm">
-                    <img id="infoCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-[1.35]">
+            
+            <!-- Cabecera limpia: Coche GIGANTE, sin globo, sin título de texto -->
+            <div class="relative flex flex-col items-center justify-center mb-2 border-b border-gray-100 pb-2">
+                <div class="w-56 h-40 flex items-center justify-center mix-blend-multiply overflow-visible mb-1">
+                    <img id="infoCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-110">
                 </div>
-                <h3 class="text-lg font-bold text-gray-800 text-center uppercase tracking-wider" id="infoCocheTitle">Datos Vehículo</h3>
-                <button id="btnConfigCoche" onclick="toggleEditCoche()" class="absolute right-0 top-0 text-gray-400 hover:text-teal-600 text-xl transition p-2">
+                <!-- El h3 infoCocheTitle se ha eliminado intencionadamente para evitar duplicar el nombre -->
+                
+                <button id="btnConfigCoche" onclick="toggleEditCoche()" class="absolute right-0 top-0 text-gray-400 hover:text-teal-600 text-xl transition p-2 z-10">
                     <i class="fas fa-cog"></i>
                 </button>
             </div>
+
             <div id="infoCocheContent" class="text-gray-600 text-sm bg-gray-50 p-3 rounded-xl border border-gray-100 flex-1 overflow-y-auto mb-4 mt-2"></div>
             <div id="infoCocheActions">
                 <button onclick="abrirTallerModal()" class="w-full bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 font-bold py-3 rounded-xl transition flex items-center justify-center mb-2">
@@ -678,7 +683,7 @@
 
         function mostrarDatosCoche(cocheId) {
             currentCocheIdForTaller = cocheId; 
-            document.getElementById('infoCocheTitle').innerText = getAliasForCoche(cocheId);
+            // ELIMINADA la orden de insertar el título de texto para que no se duplique
             document.getElementById('infoCocheImg').src = getImgForCoche(cocheId);
             isEditModeInfo = false; 
             renderInfoCocheContent();
