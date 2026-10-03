@@ -125,10 +125,9 @@
                 <p id="avisoTallerText" class="italic"></p>
             </div>
 
-            <!-- Cabecera limpia sin globo -->
             <div class="mb-5 text-gray-700 bg-gray-50 p-3 rounded-lg text-sm flex items-center">
-                <div class="w-24 h-16 mr-3 flex justify-center items-center overflow-visible mix-blend-multiply">
-                    <img id="modalCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-110">
+                <div class="w-20 h-12 mr-3 bg-white rounded flex justify-center items-center overflow-hidden mix-blend-multiply border border-gray-200 p-1 shadow-sm">
+                    <img id="modalCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-[1.35]">
                 </div>
                 <div>
                     <p><strong id="modalCocheName" class="text-base uppercase tracking-wide"></strong></p>
@@ -145,27 +144,36 @@
 
     <!-- MODAL DATOS COCHE (INFO COCHE) -->
     <div id="infoCocheModal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl max-h-[90vh] flex flex-col">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl max-h-[90vh] flex flex-col">
             
-            <!-- Cabecera limpia: Coche GIGANTE, sin globo, sin título de texto -->
-            <div class="relative flex flex-col items-center justify-center mb-2 border-b border-gray-100 pb-2">
-                <div class="w-56 h-40 flex items-center justify-center mix-blend-multiply overflow-visible mb-1">
-                    <img id="infoCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-110">
-                </div>
-                <!-- El h3 infoCocheTitle se ha eliminado intencionadamente para evitar duplicar el nombre -->
+            <!-- NUEVA CABECERA: Coche a la izquierda, Botones a la derecha -->
+            <div class="flex flex-row items-center mb-3 border-b border-gray-100 pb-4 gap-3">
                 
-                <button id="btnConfigCoche" onclick="toggleEditCoche()" class="absolute right-0 top-0 text-gray-400 hover:text-teal-600 text-xl transition p-2 z-10">
-                    <i class="fas fa-cog"></i>
-                </button>
+                <!-- Izquierda: Coche Gigante y Título -->
+                <div class="w-1/2 flex flex-col items-center justify-center">
+                    <div class="w-full h-24 flex items-center justify-center mix-blend-multiply overflow-visible mb-2">
+                        <img id="infoCocheImg" src="" alt="Coche" class="w-full h-full object-contain scale-[1.7]">
+                    </div>
+                    <h3 class="text-sm font-black text-gray-800 text-center uppercase tracking-wider" id="infoCocheTitle">Coche</h3>
+                </div>
+                
+                <!-- Derecha: Botonera de Acción Apilada -->
+                <div class="w-1/2 flex flex-col gap-2">
+                    <button id="btnConfigCoche" onclick="toggleEditCoche()" class="w-full bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 font-bold py-2.5 px-1 rounded-xl text-[11px] transition flex items-center justify-center whitespace-nowrap shadow-sm">
+                        <i class="far fa-file-alt mr-1 text-sm"></i> Editar datos
+                    </button>
+                    <button onclick="abrirTallerModal()" class="w-full bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 font-bold py-2.5 px-1 rounded-xl text-[11px] transition flex items-center justify-center whitespace-nowrap shadow-sm">
+                        <i class="fas fa-tools mr-1 text-sm"></i> Observación Taller
+                    </button>
+                    <button onclick="cerrarModal('infoCocheModal')" class="w-full bg-gray-100 border border-gray-200 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-1 rounded-xl text-[11px] transition flex items-center justify-center whitespace-nowrap shadow-sm">
+                        <i class="fas fa-times mr-1 text-sm"></i> Cerrar
+                    </button>
+                </div>
             </div>
-
-            <div id="infoCocheContent" class="text-gray-600 text-sm bg-gray-50 p-3 rounded-xl border border-gray-100 flex-1 overflow-y-auto mb-4 mt-2"></div>
-            <div id="infoCocheActions">
-                <button onclick="abrirTallerModal()" class="w-full bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 font-bold py-3 rounded-xl transition flex items-center justify-center mb-2">
-                    <i class="fas fa-tools mr-2"></i> Observación Taller
-                </button>
-                <button onclick="cerrarModal('infoCocheModal')" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl transition">Cerrar</button>
-            </div>
+            
+            <!-- Contenedor de la lista de datos -->
+            <div id="infoCocheContent" class="text-gray-600 text-sm bg-gray-50 p-3 rounded-xl border border-gray-100 flex-1 overflow-y-auto min-h-[160px] shadow-inner"></div>
+            
         </div>
     </div>
 
@@ -683,7 +691,7 @@
 
         function mostrarDatosCoche(cocheId) {
             currentCocheIdForTaller = cocheId; 
-            // ELIMINADA la orden de insertar el título de texto para que no se duplique
+            document.getElementById('infoCocheTitle').innerText = getAliasForCoche(cocheId);
             document.getElementById('infoCocheImg').src = getImgForCoche(cocheId);
             isEditModeInfo = false; 
             renderInfoCocheContent();
@@ -709,7 +717,6 @@
                             <div class="flex flex-col mb-3">${inputs}</div>
                             <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition shadow-md">Guardar Cambios</button>
                         </form>`;
-                    document.getElementById('infoCocheActions').classList.add('hidden');
                 } else {
                     let lista = infoCochesGlobal[targetKey].map(item => `
                         <div class="flex justify-between border-b border-gray-200 border-opacity-60 py-2 last:border-0 items-center">
@@ -718,14 +725,18 @@
                         </div>
                     `).join('');
                     htmlContent = `<div class="flex flex-col">${lista}</div>`;
-                    document.getElementById('infoCocheActions').classList.remove('hidden');
                 }
             }
             document.getElementById('infoCocheContent').innerHTML = htmlContent;
             
             const gearBtn = document.getElementById('btnConfigCoche');
-            if(isEditModeInfo) { gearBtn.classList.add('text-teal-600'); gearBtn.classList.remove('text-gray-400'); }
-            else { gearBtn.classList.add('text-gray-400'); gearBtn.classList.remove('text-teal-600'); }
+            if(isEditModeInfo) { 
+                gearBtn.innerHTML = `<i class="fas fa-times mr-1 text-sm"></i> Cancelar`;
+                gearBtn.className = "w-full bg-gray-200 border border-gray-300 text-gray-800 hover:bg-gray-300 font-bold py-2.5 px-1 rounded-xl text-[11px] transition flex items-center justify-center whitespace-nowrap shadow-sm";
+            } else { 
+                gearBtn.innerHTML = `<i class="far fa-file-alt mr-1 text-sm"></i> Editar datos`;
+                gearBtn.className = "w-full bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 font-bold py-2.5 px-1 rounded-xl text-[11px] transition flex items-center justify-center whitespace-nowrap shadow-sm";
+            }
         }
 
         function guardarDatosCoche(e) {
